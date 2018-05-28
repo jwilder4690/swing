@@ -7,6 +7,7 @@ class Hero{
   Vine currentVine;
   Vine oldVine;
   final int TERMINAL_VELOCITY = 10;
+  float damping = .995;
   
   
 
@@ -15,7 +16,12 @@ Hero(float x, float y, int scale){
   vel = new PVector(0,0);
   tall = 2*scale;
   wide = scale;
+  currentVine = new Vine();
   oldVine = new Vine();
+}
+
+PVector getPosition(){
+  return pos;
 }
 
 void drawHero(){
@@ -26,29 +32,39 @@ void drawHero(){
     currentVine.drawVine();
   }
   oldVine.drawVine();
-  oldVine.fall();
+  oldVine.update();
 }
 
 void update(){
   if(vineHeld){
-  //pendulum physics
+    pos = currentVine.update(damping);
+    currentVine.shortenVine(); //constantly retracts vine
   }
   else{
-    vel.y = constrain(vel.y-GRAVITY/UNIT_SPACING, -TERMINAL_VELOCITY, TERMINAL_VELOCITY);
+    vel.y = constrain(vel.y-GRAVITY, -TERMINAL_VELOCITY, TERMINAL_VELOCITY);
     pos.y += vel.y;
+    pos.x += vel.x;
   }
 }
 
 void fireVine(float mX, float mY){
   vineHeld = true;
   currentVine = new Vine(pos.x, pos.y, mX, mY); 
+  currentVine.setAngle();
 }
 
 void releaseVine(){
-  vineHeld = false;
-  oldVine = currentVine;
-  oldVine.setAngle();
-  oldVine.setFalling();
+  if(vineHeld){
+    vineHeld = false;
+    oldVine = currentVine;
+    oldVine.setAngle();
+    vel = currentVine.getTrajectory();
+    vel.mult(currentVine.getLinearVelocity());
+  }
+}
+
+void retractVine(){
+  currentVine.shortenVine();
 }
 
 }

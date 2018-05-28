@@ -13,9 +13,13 @@ class Camera{
     vel = 5;
   }
   
-  void changeFocus(float x, float y){
-    focus = new PVector(x - width/2, y - height/2);
+  void changeFocus(PVector aim){
+    focus = new PVector(aim.x - width/2, 0);
     aligned = false;
+  }
+  
+  void snapToFocus(float aimX){
+    pos.x = aimX;
   }
   
   void update(){
