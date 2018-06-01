@@ -1,4 +1,4 @@
-class Vine{
+class Web{
   final int MINIMUM_LENGTH = 10;
   PVector start;
   PVector end;
@@ -11,17 +11,17 @@ class Vine{
   float gravityConstant = 0.8;
   float damping = 0.95;
 
-Vine(){
+Web(){
   this(0.0, 0.0, 0.0, 0.0);
 }
-Vine(float startX, float startY, float endX, float endY){
+Web(float startX, float startY, float endX, float endY){
   start = new PVector(startX, startY);
   end = new PVector(endX, endY);
   prev = start;
 }
 
-void drawVine(){
-  stroke(0,255,0);
+void drawWeb(){
+  stroke(75,75,75);
   line(start.x, start.y, end.x, end.y);
 }
 
@@ -55,10 +55,10 @@ PVector getTrajectory(){
 }
 
 float getLinearVelocity(){
-  return abs(angularVel * (2*PI*size)/10);
+  return abs(angularVel * size);
 }
 
-void shortenVine(){
+void shortenWeb(){
   size -= retractSpeed;
   if(size < MINIMUM_LENGTH){
     size = MINIMUM_LENGTH;

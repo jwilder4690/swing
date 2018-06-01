@@ -1,11 +1,12 @@
 class Hero{
+  PVector startPos;
   PVector pos;
   PVector vel;
   int tall;
   int wide;
-  boolean vineHeld = false;
-  Vine currentVine;
-  Vine oldVine;
+  boolean webHeld = false;
+  Web currentWeb;
+  Web oldWeb;
   final int TERMINAL_VELOCITY = 10;
   float damping = .995;
   
@@ -13,32 +14,37 @@ class Hero{
 
 Hero(float x, float y, int scale){
   pos = new PVector(x,y);
+  startPos = new PVector(pos.x,pos.y);
   vel = new PVector(0,0);
   tall = 2*scale;
-  wide = scale;
-  currentVine = new Vine();
-  oldVine = new Vine();
+  wide = scale/2;
+  currentWeb = new Web();
+  oldWeb = new Web();
 }
 
 PVector getPosition(){
   return pos;
 }
 
+PVector getVelocity(){
+  return vel;
+}
+
 void drawHero(){
-  fill(0,255,0);
-  rectMode(CORNER);
-  rect(pos.x - wide, pos.y, wide, tall);
-  if(vineHeld){
-    currentVine.drawVine();
+
+  if(webHeld){
+    currentWeb.drawWeb();
   }
-  oldVine.drawVine();
-  oldVine.update();
+  oldWeb.drawWeb();
+  oldWeb.update();
+  fill(0,0,0);
+  ellipse(pos.x, pos.y, wide, wide);
 }
 
 void update(){
-  if(vineHeld){
-    pos = currentVine.update(damping);
-    currentVine.shortenVine(); //constantly retracts vine
+  if(webHeld){
+    pos = currentWeb.update(damping);
+    currentWeb.shortenWeb(); //constantly retracts web
   }
   else{
     vel.y = constrain(vel.y-GRAVITY, -TERMINAL_VELOCITY, TERMINAL_VELOCITY);
@@ -47,24 +53,30 @@ void update(){
   }
 }
 
-void fireVine(float mX, float mY){
-  vineHeld = true;
-  currentVine = new Vine(pos.x, pos.y, mX, mY); 
-  currentVine.setAngle();
+void fireWeb(float mX, float mY){
+  webHeld = true;
+  currentWeb = new Web(pos.x, pos.y, mX, mY); 
+  currentWeb.setAngle();
 }
 
-void releaseVine(){
-  if(vineHeld){
-    vineHeld = false;
-    oldVine = currentVine;
-    oldVine.setAngle();
-    vel = currentVine.getTrajectory();
-    vel.mult(currentVine.getLinearVelocity());
+void releaseWeb(){
+  if(webHeld){
+    webHeld = false;
+    oldWeb = currentWeb;
+    oldWeb.setAngle();
+    vel = currentWeb.getTrajectory();
+    vel.mult(currentWeb.getLinearVelocity());
   }
 }
 
-void retractVine(){
-  currentVine.shortenVine();
+void retractWeb(){
+  currentWeb.shortenWeb();
+}
+
+void reset(){
+  webHeld = false;
+  pos = new PVector(startPos.x, startPos.y);
+  vel = new PVector(0,0);
 }
 
 }

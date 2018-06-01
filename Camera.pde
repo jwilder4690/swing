@@ -1,8 +1,8 @@
 class Camera{
   PVector pos;
-  float vel;
+  float vel = 5;
   PVector focus;
-  boolean aligned = false;
+  boolean locked = true;
   
   Camera(){
     this(0.0,0.0);
@@ -10,31 +10,8 @@ class Camera{
   Camera(float x,float y){
     pos = new PVector(x,y);
     focus = pos;
-    vel = 5;
   }
-  
-  void changeFocus(PVector aim){
-    focus = new PVector(aim.x - width/2, 0);
-    aligned = false;
-  }
-  
-  void snapToFocus(float aimX){
-    pos.x = aimX;
-  }
-  
-  void update(){
-    if(!aligned){
-    float dist = pos.dist(focus);
-    PVector direction = PVector.sub(focus, pos);
-    direction.normalize();
-    
-    pos.add(direction.mult(vel)); 
-    if(pos.dist(focus) < vel){
-      aligned = true;
-    }
-    }
-  }
-  
+     
   float getX(){
     return -pos.x;
   }
@@ -42,6 +19,18 @@ class Camera{
     return -pos.y;
   }
   
+  boolean getLocked(){
+    return locked;
+  }
+  
+  void setVelocity(float rate){
+    vel = rate;
+  }
+    
+  void lockOnTo(float heroX){
+    pos.x = heroX - width/2;
+  }
+    
   void moveLeft(){
     pos.x -= vel;
   }
@@ -56,5 +45,9 @@ class Camera{
   
   void moveDown(){
     pos.y += vel;
+  }
+  
+  void reset(){
+    pos = new PVector(0,0);
   }
 }

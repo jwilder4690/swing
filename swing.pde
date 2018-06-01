@@ -4,7 +4,9 @@ final int FPS = 60;
 Hero hero;
 Camera cam;
 boolean[] keys = new boolean[255];
-Tree[] forest = new Tree[50];
+Dandelion[] weeds = new Dandelion[50];
+Grass[] lawn;
+float grassPatchSize;
 
 void setup(){
   fullScreen();
@@ -12,28 +14,47 @@ void setup(){
   frameRate(FPS);
   hero = new Hero(width/2, 0, UNIT_SPACING);
   cam = new Camera();
-  for(int i = 0; i < forest.length; i++){
-    forest[i] = new Tree(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, UNIT_SPACING*3)));
+  grassPatchSize = width/4.0;
+  lawn = new Grass[int(grassPatchSize/Grass.grassWidth)];
+  for(int i = 0; i < weeds.length; i++){
+    weeds[i] = new Dandelion(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, UNIT_SPACING*3)));
+  }
+  println(lawn.length);
+  for(int i = 0; i < lawn.length; i++){
+    lawn[i] = new Grass(random(90,100), i);
+    lawn[i].generateGrass();
   }
 }
 
 void draw(){
-  background(0);
+  background(0,200,200);
   pushMatrix();
   translate(cam.getX(),cam.getY());
-  //drawGrid(UNIT_SPACING);
-  for(int i = 0; i < forest.length; i++){
-    forest[i].drawTree();
+  for(int i = 0; i < weeds.length; i++){
+    weeds[i].drawDandelion();
+  }
+  for(int i = 0; i < lawn.length; i++){
+    float shift = floor(-cam.getX()/grassPatchSize)*grassPatchSize;
+    lawn[i].drawGrass(shift);
+    lawn[i].drawGrass(shift+grassPatchSize);
+    lawn[i].drawGrass(shift+2*grassPatchSize);
+    lawn[i].drawGrass(shift+3*grassPatchSize);
+    lawn[i].drawGrass(shift+4*grassPatchSize);
   }
   hero.drawHero();
   hero.update();
   popMatrix();
   
   checkInput();
-  if(hero.getPosition().x+cam.getX() > 2*width/3){
+  if(cam.getLocked()){
+    cam.lockOnTo(hero.getPosition().x);
+  }
+  else if(hero.getPosition().x+cam.getX() > 2*width/3){
+    cam.setVelocity(hero.getVelocity().x);
     cam.moveRight();
   }
-  if(hero.getPosition().x+cam.getX() < width/3){
+  else if(hero.getPosition().x+cam.getX() < width/3){
+    cam.setVelocity(-hero.getVelocity().x);
     cam.moveLeft();
   }
   //cam.update();
@@ -51,15 +72,15 @@ void keyReleased(){
 }
 
 void mousePressed(){
-  for(int i = 0; i < forest.length; i++){
-    if(forest[i].hitTree(mouseX-cam.getX(), mouseY+cam.getY())){
-      hero.fireVine(mouseX-cam.getX(), mouseY+cam.getY());
+  for(int i = 0; i < weeds.length; i++){
+    if(weeds[i].hitDandelion(mouseX-cam.getX(), mouseY+cam.getY())){
+      hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
     }
   }
 }
 
 void mouseReleased(){
-  hero.releaseVine();
+  hero.releaseWeb();
 }
 
 
@@ -77,11 +98,16 @@ void checkInput(){
     cam.moveDown();
   }
   if(keys[' ']){
-    hero.retractVine();
+    hero.retractWeb();
+  }
+  if(keys['R'] || keys['r']){
+    hero.reset();
+    cam.reset();
   }
   
 }
 
+//remove later
 void drawGrid(int space){
   stroke(0,0,0);
   int limit = 3000;
