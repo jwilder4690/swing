@@ -7,8 +7,8 @@ class Hero{
   boolean webHeld = false;
   Web currentWeb;
   Web oldWeb;
-  final int TERMINAL_VELOCITY = 10;
-  float damping = .995;
+  final int TERMINAL_VELOCITY = 20;
+  float damping = .99;
   
   
 

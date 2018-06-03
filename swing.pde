@@ -1,25 +1,40 @@
+import processing.sound.*;
+SoundFile mowerSound;
+
 final int UNIT_SPACING = 50;
-final float GRAVITY = -9.8/UNIT_SPACING;
-final int FPS = 60;
+final float GRAVITY = -9.8/(UNIT_SPACING/2);
+final int FPS = 24;
+final int START_SCREEN = 0;
+final int GAME_PLAY = 1;
+final int GAME_OVER = 2;
+
 Hero hero;
 Camera cam;
+int gameState = GAME_PLAY;
 boolean[] keys = new boolean[255];
-Dandelion[] weeds = new Dandelion[50];
+Dandelion[] weeds;
 Grass[] lawn;
+Mower mower;
 float grassPatchSize;
+float weedPatchSize;
+float shift;
 
 void setup(){
   fullScreen();
   //size(1080,720);
   frameRate(FPS);
+  createAudio();
+  mowerSound.loop();
   hero = new Hero(width/2, 0, UNIT_SPACING);
   cam = new Camera();
+  mower = new Mower((-height/2)*0.8, height/2, height);
   grassPatchSize = width/4.0;
-  lawn = new Grass[int(grassPatchSize/Grass.grassWidth)];
+  weedPatchSize = width;
+  lawn = new Grass[int(grassPatchSize/Grass.GRASS_WIDTH)];
+  weeds = new Dandelion[int(weedPatchSize/UNIT_SPACING)];
   for(int i = 0; i < weeds.length; i++){
     weeds[i] = new Dandelion(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, UNIT_SPACING*3)));
   }
-  println(lawn.length);
   for(int i = 0; i < lawn.length; i++){
     lawn[i] = new Grass(random(90,100), i);
     lawn[i].generateGrass();
@@ -27,37 +42,39 @@ void setup(){
 }
 
 void draw(){
-  background(0,200,200);
-  pushMatrix();
-  translate(cam.getX(),cam.getY());
-  for(int i = 0; i < weeds.length; i++){
-    weeds[i].drawDandelion();
+  if(gameState == GAME_PLAY){
+    background(0,200,200);
+    pushMatrix();
+    translate(cam.getX(),cam.getY());
+    shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+    for(int i = 0; i < weeds.length; i++){
+      weeds[i].drawDandelion(shift);
+      weeds[i].drawDandelion(shift+weedPatchSize);
+    }
+    shift = floor(-cam.getX()/grassPatchSize)*grassPatchSize;
+    for(int i = 0; i < lawn.length; i++){
+      lawn[i].drawGrass(shift);
+      lawn[i].drawGrass(shift+grassPatchSize);
+      lawn[i].drawGrass(shift+2*grassPatchSize);
+      lawn[i].drawGrass(shift+3*grassPatchSize);
+      lawn[i].drawGrass(shift+4*grassPatchSize);
+    }
+    hero.drawHero();
+    hero.update();
+    mower.drawMower();
+    mower.update(Mower.MOWER_SPEED);
+    popMatrix();
+    
+    checkInput();
+    gameState = checkGameState();
+    cam.moveRight(Mower.MOWER_SPEED);
   }
-  for(int i = 0; i < lawn.length; i++){
-    float shift = floor(-cam.getX()/grassPatchSize)*grassPatchSize;
-    lawn[i].drawGrass(shift);
-    lawn[i].drawGrass(shift+grassPatchSize);
-    lawn[i].drawGrass(shift+2*grassPatchSize);
-    lawn[i].drawGrass(shift+3*grassPatchSize);
-    lawn[i].drawGrass(shift+4*grassPatchSize);
+  else if(gameState == GAME_OVER){
+   background(0,0,0);
+   fill(255,0,0);
+   text("Game over! Press 'r' to restart.", width/2, height/2);
+   checkInput();
   }
-  hero.drawHero();
-  hero.update();
-  popMatrix();
-  
-  checkInput();
-  if(cam.getLocked()){
-    cam.lockOnTo(hero.getPosition().x);
-  }
-  else if(hero.getPosition().x+cam.getX() > 2*width/3){
-    cam.setVelocity(hero.getVelocity().x);
-    cam.moveRight();
-  }
-  else if(hero.getPosition().x+cam.getX() < width/3){
-    cam.setVelocity(-hero.getVelocity().x);
-    cam.moveLeft();
-  }
-  //cam.update();
 }
 
 void keyPressed(){
@@ -72,8 +89,9 @@ void keyReleased(){
 }
 
 void mousePressed(){
+  float shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
   for(int i = 0; i < weeds.length; i++){
-    if(weeds[i].hitDandelion(mouseX-cam.getX(), mouseY+cam.getY())){
+    if(weeds[i].hitDandelion(mouseX-cam.getX(), mouseY+cam.getY(), shift)){
       hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
     }
   }
@@ -103,16 +121,21 @@ void checkInput(){
   if(keys['R'] || keys['r']){
     hero.reset();
     cam.reset();
+    mower.reset();
+    gameState = GAME_PLAY;
+    keys['r'] = false;
+    keys['R'] = false;
   }
+}
   
+int checkGameState(){
+    if(mower.checkDistance(hero.getPosition()) <= 0){
+      mowerSound.stop();
+      return GAME_OVER;
+    }
+    return GAME_PLAY;
 }
 
-//remove later
-void drawGrid(int space){
-  stroke(0,0,0);
-  int limit = 3000;
-  for(int i = -limit; i < limit; i+=space){
-    line(-limit, i, limit, i);
-    line(i, -limit, i, limit);
-  }
+void createAudio(){
+  mowerSound = new SoundFile(this, "mower.wav");
 }

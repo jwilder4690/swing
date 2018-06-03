@@ -8,7 +8,7 @@ class Web{
   float angularAcc = 0;
   float retractSpeed = 3;
   float size = 0;
-  float gravityConstant = 0.8;
+  float gravityConstant = 1.1;
   float damping = 0.95;
 
 Web(){
@@ -30,6 +30,7 @@ void update(){
   start.y = end.y + size * cos(angle);
   
   angularAcc = (-1 * gravityConstant/size) * sin(angle);
+  angularAcc *= damping;
   angularVel += angularAcc;
   angularVel *= damping;
   angle += angularVel;
@@ -71,7 +72,7 @@ void shortenWeb(){
 void setAngle(){
   size = start.dist(end);
   float deltaX = start.x - end.x;
-  angle = sin(deltaX/size); 
+  angle = asin(deltaX/size); 
   if(start.y < end.y){
     angle = PI-angle;
   }  

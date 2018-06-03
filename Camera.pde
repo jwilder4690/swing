@@ -39,6 +39,10 @@ class Camera{
     pos.x += vel;
   }
   
+  void moveRight(float speed){
+    pos.x += speed;
+  }
+  
   void moveUp(){
     pos.y -= vel;
   }
