@@ -1,8 +1,10 @@
 import processing.sound.*;
 SoundFile mowerSound;
+float amplitude;
 
 final int UNIT_SPACING = 50;
 final float GRAVITY = -9.8/(UNIT_SPACING/2);
+final float GRASS_HEIGHT = 100;
 final int FPS = 24;
 final int START_SCREEN = 0;
 final int GAME_PLAY = 1;
@@ -36,7 +38,7 @@ void setup(){
     weeds[i] = new Dandelion(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, UNIT_SPACING*3)));
   }
   for(int i = 0; i < lawn.length; i++){
-    lawn[i] = new Grass(random(90,100), i);
+    lawn[i] = new Grass(random(0.9*GRASS_HEIGHT,GRASS_HEIGHT), i);
     lawn[i].generateGrass();
   }
 }
@@ -129,7 +131,10 @@ void checkInput(){
 }
   
 int checkGameState(){
-    if(mower.checkDistance(hero.getPosition()) <= 0){
+  float distance = mower.checkDistance(hero.getPosition());
+  amplitude = map(distance, 0, width, 2, 0.5); //neat 
+  mowerSound.amp(amplitude);
+    if(distance <= 0){
       mowerSound.stop();
       return GAME_OVER;
     }
@@ -138,4 +143,5 @@ int checkGameState(){
 
 void createAudio(){
   mowerSound = new SoundFile(this, "mower.wav");
+  mowerSound.amp(amplitude);
 }

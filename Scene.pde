@@ -75,13 +75,17 @@ class Mower{
   
   void drawMower(){
     noStroke();
-    fill(0,0,0);
     pushMatrix();
     translate(pos.x,pos.y);
+    fill(205,25,25);
+    rect(0,(-size*0.8)/2, -2000, size*0.8);
     rotate(angle);
+    fill(0,0,0);
     ellipse(0,0, size, size);
     fill(185,185,185);
     ellipse(0,0, size*0.85, size*0.85);
+    fill(0,0,0);
+    ellipse(0,0,size*.25, size*.25);
     pushMatrix();
     fill(0,0,0);
     translate(0, 0);
