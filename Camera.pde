@@ -1,6 +1,6 @@
 class Camera{
   PVector pos;
-  float vel = 5;
+  float vel = 8;
   PVector focus;
   boolean locked = true;
   

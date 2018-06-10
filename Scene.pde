@@ -60,7 +60,9 @@ class Grass{
 }
 
 class Mower{
-  public static final float MOWER_SPEED = 8;
+  public static final int MOWER_SPEED = 8;
+  float velocity = 8;
+  float acceleration = 0;
   PVector pos;
   PVector startPos;
   float angle;
@@ -71,6 +73,10 @@ class Mower{
     startPos = new PVector(x,y);
     angle = 0;
     size = big;
+  }
+  
+  float getVelocity(){
+    return velocity;
   }
   
   void drawMower(){
@@ -102,15 +108,71 @@ class Mower{
     return distance - (size/2);    
   }
   
-  void update(float speed){
-    angle += speed/size;
-    pos.add(speed,0);
+  void update(){
+    angle += velocity/size;
+    pos.add(velocity,0);
+    velocity += acceleration;
+    if(clock.getElapsedTime() > 15000){
+      acceleration = 0.005; 
+      if(clock.getElapsedTime() >35000){
+        acceleration = -0.1;
+        if(clock.getElapsedTime() > 38000){
+          acceleration = 0;
+          velocity = 8;
+        }
+      }
+    }
   }
   
   void reset(){
     mowerSound.stop();
     pos = new PVector(startPos.x, startPos.y);
     angle = 0;
+    acceleration = 0;
+    velocity = 8;
     mowerSound.loop();
   }
+}
+
+class Insect{
+  PVector pos;
+  PVector vel; 
+  float groundLevel;
+  float jumpStrength;
+  int size;
+  boolean jumping = false; 
+  
+  Insect(float x, float y, float jump, int big){
+    pos = new PVector(x,y);
+    vel = new PVector(0,0);
+    jumpStrength = jump;
+    groundLevel = y;
+    size = big;
+  }
+  
+  void drawInsect(){
+    fill(105,30,30);
+    ellipse(pos.x, pos.y, size*1.3, size);
+  }
+  
+  void update(){
+    vel.y -= GRAVITY;
+    pos.add(vel);
+    if(pos.y >= groundLevel){
+      vel.set(0,0);
+      pos.y = groundLevel;
+      jumping = false;
+    }
+  }
+  
+  void jump(){
+    if(!jumping){
+      jumping = true;
+      vel = new PVector(jumpStrength*1.5,-jumpStrength);
+    }
+  }
+
+ PVector getPosition(){
+   return pos;
+ }
 }
