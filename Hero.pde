@@ -29,7 +29,7 @@ Hero(float x, float y, int scale){
   currentWeb = new Web();
   oldWeb = new Web();
   speechBubble = new Bubble(pos.x, pos.y, wide, (2*tall)/3, false);
-  speechBubble.setText(quotes[1]);
+  speechBubble.setText(quotes[0]);
   speechBubble.setSize(24);
   speechBubble.adjustToText();
 }
@@ -40,6 +40,10 @@ PVector getPosition(){
 
 PVector getVelocity(){
   return vel;
+}
+
+void setPos(float x, float y){
+  pos.set(x,y);
 }
 
 void drawHero(){
@@ -76,21 +80,24 @@ void update(){
     pos.x += vel.x;
   }
   //////////////////////////////Dialog///////////////////////////////////////////////////////
-  if(clock.getElapsedTime() / interval > 0 && interval < 100000){
-    interval += INTERVAL_STEP;
-    duration = 124;
-    speechBubble.setVisibility(true);
-    speechBubble.setText(quotes[int(random(quotes.length))]);
-    speechBubble.adjustToText();
-    
-  }
-  if(duration > 0){
-    duration--;
-    if(duration == 0){
-      speechBubble.setVisibility(false);
+  if(gameState == GAME_STAGE_1){
+    if(clock.getElapsedTime() / interval > 0 && interval < 100000){
+      interval += INTERVAL_STEP;
+      duration = 124;
+      speechBubble.setVisibility(true);
+      speechBubble.setText(quotes[int(random(quotes.length))]);
+      speechBubble.adjustToText();
+      
+    }
+    if(duration > 0){
+      duration--;
+      if(duration == 0){
+        speechBubble.setVisibility(false);
+      }
     }
   }
 }
+
 
 void fireWeb(float mX, float mY){
   webHeld = true;
@@ -116,6 +123,10 @@ void reset(){
   webHeld = false;
   pos = new PVector(startPos.x, startPos.y);
   vel = new PVector(0,0);
+}
+
+void speechBubbleSwitch(boolean turn){
+  speechBubble.setVisibility(turn);
 }
 
 }

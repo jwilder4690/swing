@@ -19,7 +19,7 @@ class Bubble{
   Bubble(){
     this(0,height,width, height, false);
   }
-  Bubble(float x, float y, float bw, float bh, boolean text){  //x, y are bottom left
+  Bubble(float x, float y, float bw, float bh, boolean textOnly){  //x, y are bottom left
     pos = new PVector(x,y);
     wide = bw;
     tall = bh;
@@ -27,7 +27,7 @@ class Bubble{
     font = createFont("BodoniMTCondensed-Bold-48.vlw", 48);
     textFont(font);
     textAlign(CENTER,CENTER);
-    textOnly = text;
+    this.textOnly = textOnly;
   }
   
   void setText(String msg){

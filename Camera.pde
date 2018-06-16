@@ -19,6 +19,10 @@ class Camera{
     return -pos.y;
   }
   
+  void setPos(float x, float y){
+    pos.set(x,y);
+  }
+  
   boolean getLocked(){
     return locked;
   }
