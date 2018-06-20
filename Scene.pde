@@ -160,7 +160,6 @@ class Mower{
         if(clock.getElapsedTime() > 45000){
           acceleration = 0;
           velocity = 8;
-          println(hero.getPosition());
         }
       }
     }
@@ -232,43 +231,48 @@ class Spider{
   float size = 5;
   float scale; 
   float[] bounds;
+  float limit;
   float speed;
   float max;
   color bodyColor = color(0,0,0);
-  float downwardInfluence = 0;
+  boolean caught;
   
   Spider(float x, float y, boolean mom, float a, float b, float c, float d){
     pos = new PVector(x,y);
-    println("Spider pos: "+ pos);
     vel = new PVector(0,0);
     if(mom){
       scale = 3;
-      max = 2;
+      max = 1;
       speed = .1;
     }
     else{
       scale = 1;
       speed = .2;
-      max = 3;
+      max = 2;
     }
     bounds = new float[] {a,b,c,d};
-    println(bounds);
+    limit = 8*bounds[3]/9;
   }
   
   void drawSpider(){
-    pushMatrix();
-    translate(pos.x, pos.y);
-    println("x: " + pos.x + " y: " + pos.y);
-    //scale(scale);
-    fill(bodyColor);
-    ellipse(0,0,size,size);
-    popMatrix();    
+    if(!caught){
+      pushMatrix();
+      translate(pos.x, pos.y);
+      scale(scale);
+      fill(bodyColor);
+      noStroke();
+      ellipse(0,0,size,size);
+      popMatrix();    
+      //stroke(255,0,0);
+      //fill(255,0,0);
+      //line(bounds[0],bounds[3]-limit, bounds[2],bounds[3]-limit);
+       lowerLimit();
+    }
+    
   }
   
-  void update(){
-    println("Pos before vel: " + pos + " Vel: " + vel);
+  void update(PVector heroPos, int heroSize){
     pos.add(vel);
-    println("Pos after vel: " + pos);
     
     if(pos.x < bounds[0]){
       pos.x = bounds[0];
@@ -282,24 +286,47 @@ class Spider{
       pos.y = bounds[1];
       vel.y = -vel.y;
     }
-    if(pos.y > bounds[3]){
-      pos.y = bounds[3];
+    if(pos.y > bounds[3]-limit){
+      pos.y = bounds[3]-limit;
       vel.y = -vel.y;
     }
     
     
     vel.x = constrain(vel.x + random(-speed, speed), -max, max);
-    vel.y = constrain(vel.y + random(-speed, speed) + downwardInfluence, -max, max);
+    vel.y = constrain(vel.y + random(-speed, speed), -max, max);
+    
+    if(random(1) > .95){
+      vel.y = -vel.y;
+    }
+    if(random(1) > .95){
+      vel.x = -vel.x;
+    }
+    
+    if(pos.dist(heroPos) <= heroSize/2){
+      caught = true;
+    }
   }
   
-  void increaseInfluence(){
-    downwardInfluence += .1;
+  void lowerLimit(){
+    if(limit > 0){
+      limit -= 0.1;
+    }
+    else limit = 0;
   }
   
-  void drawWeb(float x, float y, float size){
+  void drawWeb(){
     stroke(55,55,55);
+    float size = (bounds[2]-bounds[0]);
     noFill();
-    ellipse(x,y, size, size);
+    ellipse(bounds[0]+size/2, bounds[1]+size/2, size,size);
+    ellipse(bounds[0]+size/2, bounds[1]+size/2, size/2,size/2);
+    pushMatrix();
+    translate(bounds[0]+size/2, bounds[1]+size/2);
+    for(int i = 0; i < 8; i++){
+      rotate(PI/8);
+      line(0, -size/1.4, 0, size/1.4);
+    }
+    popMatrix();
   }
   
   

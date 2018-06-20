@@ -7,6 +7,7 @@ class Hero{
   boolean webHeld = false;
   Web currentWeb;
   Web oldWeb;
+  int leashLength = 50;
   final int TERMINAL_VELOCITY = 20;
   float damping = .99;
   float grassDrag = .75;
@@ -40,6 +41,10 @@ PVector getPosition(){
 
 PVector getVelocity(){
   return vel;
+}
+
+int getSize(){
+  return wide;
 }
 
 void setPos(float x, float y){

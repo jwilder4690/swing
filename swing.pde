@@ -32,7 +32,7 @@ float grassHeight;
 float fenceWidth;
 float fenceSpacing;
 float shift;
-String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here? ^", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?"};
+String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?"};
 
 void setup(){
   //fullScreen();
@@ -66,10 +66,11 @@ void setup(){
   for(int i = 2; i < fence.length; i++){
     fence[i] = new Fence(FENCE_START+((i-1)*fenceSpacing), height);
   }
-  brood[0] = new Spider(FENCE_START+ fenceWidth, -height/4, true, FENCE_START+ fenceWidth-fenceWidth/2, -height/4 - fenceWidth/2, FENCE_START+ fenceWidth + fenceWidth/2, -height/4 + fenceWidth/2 );
+  float[] temp = fence[2].getCoordinates();
+  float[]temp2 = fence[3].getCoordinates();
+  brood[0] = new Spider(temp[2], -height/4, true, temp[2], -height/4, temp2[0], (-height/4) + (temp2[0]-temp[2]));
   for(int i = 2; i < fence.length; i++){
-    float[] temp = fence[i].getCoordinates();
-    println(temp);
+    temp = fence[i].getCoordinates();
     brood[(i-2)*4+1] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3]);
     brood[(i-2)*4+2] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3]);
     brood[(i-2)*4+3] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3]);
@@ -147,13 +148,25 @@ void draw(){
       lawn[i].drawGrass(shift+3*grassPatchSize);
       lawn[i].drawGrass(shift+4*grassPatchSize);
     }
+    brood[0].drawWeb();
     for(int i = 0; i < brood.length; i++){
       brood[i].drawSpider();
-      brood[i].update();
+      brood[i].update(hero.getPosition(), hero.getSize());
     }
     hero.drawHero();
     hero.update();
     popMatrix();
+    if(clock.getElapsedTime() > 3000 && cam.getY() < height/2){
+      cam.moveUp();
+      if(cam.getY() >= height/2){
+        dialog.setText(stageTwoText[1]);
+        clock.startTime();
+      }
+    }
+    else if(clock.getElapsedTime() > 3000 && cam.getY() >= height/2){
+      dialog.setVisibility(false);
+      
+    }
     dialog.display();
   }
   else if(gameState == GAME_OVER){
@@ -187,8 +200,8 @@ void mousePressed(){
   }
   else if(gameState == GAME_STAGE_2){
     for(int i = 0; i < fence.length; i++){
-      if(fence[i].hitFence(mouseX - cam.getX(), mouseY+cam.getY())){
-        hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
+      if(fence[i].hitFence(mouseX - cam.getX(), mouseY-cam.getY())){
+        hero.fireWeb(mouseX-cam.getX(), mouseY-cam.getY());
       }
     }
   }

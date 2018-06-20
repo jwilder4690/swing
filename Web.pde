@@ -20,6 +20,10 @@ Web(float startX, float startY, float endX, float endY){
   prev = start;
 }
 
+void setEnd(float hx, float hy){
+  end.set(hx, hy);
+}
+
 void drawWeb(){
   stroke(75,75,75);
   line(start.x, start.y, end.x, end.y);
@@ -35,6 +39,7 @@ void update(){
   angularVel *= damping;
   angle += angularVel;
 }
+
 
 PVector update(float damp){
   prev = new PVector(start.x, start.y);
