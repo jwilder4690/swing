@@ -9,8 +9,12 @@ class Hero{
   Web oldWeb;
   int leashLength = 50;
   final int TERMINAL_VELOCITY = 20;
+  final float DRIFT_SPEED = .1;
   float damping = .99;
   float grassDrag = .75;
+  int health = 3;
+  int cooldown = 0;
+  
   
   //Dialog/////
   Bubble speechBubble;
@@ -45,6 +49,10 @@ PVector getVelocity(){
 
 int getSize(){
   return wide;
+}
+
+int getHealth(){
+  return health;
 }
 
 void setPos(float x, float y){
@@ -103,6 +111,17 @@ void update(){
   }
 }
 
+void takeDamage(){
+  if(cooldown == 0){
+    health--;
+    cooldown = 200;
+    grunt.play();
+  }
+  else{
+    cooldown--;
+  }
+  
+}
 
 void fireWeb(float mX, float mY){
   webHeld = true;
@@ -122,6 +141,18 @@ void releaseWeb(){
 
 void retractWeb(){
   currentWeb.shortenWeb();
+}
+
+void moveLeft(){
+  if(!webHeld){
+    vel.x -= DRIFT_SPEED;
+  }
+}
+
+void moveRight(){
+  if(!webHeld){
+    vel.x += DRIFT_SPEED;
+  }
 }
 
 void reset(){

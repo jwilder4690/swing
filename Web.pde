@@ -19,6 +19,10 @@ Web(float startX, float startY, float endX, float endY){
   end = new PVector(endX, endY);
   prev = start;
 }
+boolean checkRetracted(){
+  //ternary operator practice:
+    return (size == MINIMUM_LENGTH) ? true : false;
+}
 
 void setEnd(float hx, float hy){
   end.set(hx, hy);

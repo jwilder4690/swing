@@ -236,11 +236,16 @@ class Spider{
   float max;
   color bodyColor = color(0,0,0);
   boolean caught;
+  boolean safe = false;
+  float damping = 0.95;
+  boolean mother = false;
+  Web leash;
   
   Spider(float x, float y, boolean mom, float a, float b, float c, float d){
     pos = new PVector(x,y);
     vel = new PVector(0,0);
     if(mom){
+      mother = true;
       scale = 3;
       max = 1;
       speed = .1;
@@ -252,59 +257,102 @@ class Spider{
     }
     bounds = new float[] {a,b,c,d};
     limit = 8*bounds[3]/9;
+    leash = new Web();
+    caught = false;
+  }
+  
+  float[] getBounds(){
+    return bounds;
+  }
+  
+  void setBounds(float[] newLimits){
+    bounds = newLimits;
+    safe = true;
+  }
+  
+  PVector getPosition(){
+    return pos;
+  }
+  
+  boolean getSafe(){
+    return safe;
+  }
+  
+  void setCaught(boolean change){
+    caught = change;
   }
   
   void drawSpider(){
-    if(!caught){
-      pushMatrix();
-      translate(pos.x, pos.y);
-      scale(scale);
-      fill(bodyColor);
-      noStroke();
-      ellipse(0,0,size,size);
-      popMatrix();    
-      //stroke(255,0,0);
-      //fill(255,0,0);
-      //line(bounds[0],bounds[3]-limit, bounds[2],bounds[3]-limit);
-       lowerLimit();
+    pushMatrix();
+    translate(pos.x, pos.y);
+    scale(scale);
+    fill(bodyColor);
+    noStroke();
+    ellipse(0,0,size,size);
+    popMatrix();    
+    //stroke(255,0,0);
+    //fill(255,0,0);
+    //line(bounds[0],bounds[3]-limit, bounds[2],bounds[3]-limit);
+    lowerLimit();   
+    if(caught){
+      leash.drawWeb();
     }
-    
   }
   
-  void update(PVector heroPos, int heroSize){
-    pos.add(vel);
-    
-    if(pos.x < bounds[0]){
-      pos.x = bounds[0];
-      vel.x = -vel.x;
+  void update(){
+    if(caught){
+      if(mother){
+       //freeze, position stops updating
+      }
+      else{
+        pos = leash.update(damping);
+        leash.shortenWeb(); //constantly retracts web
+        if(leash.checkRetracted()){
+          caught = false;
+          limit = 0;
+        }
+      }
     }
-    if(pos.x > bounds[2]){
-      pos.x = bounds[2];
-      vel.x = -vel.x;
+    else{
+      pos.add(vel);
+      
+      if(pos.x < bounds[0]){
+        pos.x = bounds[0];
+        vel.x = -vel.x;
+      }
+      if(pos.x > bounds[2]){
+        pos.x = bounds[2];
+        vel.x = -vel.x;
+      }
+      if(pos.y < bounds[1]){
+        pos.y = bounds[1];
+        vel.y = -vel.y;
+      }
+      if(pos.y > bounds[3]-limit){
+        pos.y = bounds[3]-limit;
+        vel.y = -vel.y;
+      }
+      
+      
+      vel.x = constrain(vel.x + random(-speed, speed), -max, max);
+      vel.y = constrain(vel.y + random(-speed, speed), -max, max);
+      
+      if(random(1) > .95){
+        vel.y = -vel.y;
+      }
+      if(random(1) > .95){
+        vel.x = -vel.x;
+      }
     }
-    if(pos.y < bounds[1]){
-      pos.y = bounds[1];
-      vel.y = -vel.y;
-    }
-    if(pos.y > bounds[3]-limit){
-      pos.y = bounds[3]-limit;
-      vel.y = -vel.y;
-    }
-    
-    
-    vel.x = constrain(vel.x + random(-speed, speed), -max, max);
-    vel.y = constrain(vel.y + random(-speed, speed), -max, max);
-    
-    if(random(1) > .95){
-      vel.y = -vel.y;
-    }
-    if(random(1) > .95){
-      vel.x = -vel.x;
-    }
-    
+  }
+  
+  boolean checkCaught(PVector heroPos, int heroSize, PVector momPos) {
     if(pos.dist(heroPos) <= heroSize/2){
       caught = true;
+      leash = new Web(pos.x, pos.y, momPos.x, momPos.y);
+      leash.setAngle();
     }
+    return caught;
   }
   
   void lowerLimit(){
@@ -314,7 +362,7 @@ class Spider{
     else limit = 0;
   }
   
-  void drawWeb(){
+  void drawHomeWeb(){
     stroke(55,55,55);
     float size = (bounds[2]-bounds[0]);
     noFill();

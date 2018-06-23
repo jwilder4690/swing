@@ -1,5 +1,5 @@
 import processing.sound.*;
-SoundFile mowerSound;
+SoundFile mowerSound, grunt;
 float amplitude = 1;
 
 final int UNIT_SPACING = 50;
@@ -11,6 +11,7 @@ final int GAME_STAGE_2 = 2;
 final int GAME_STAGE_3 = 3;
 final int GAME_OVER = 4;
 final int FENCE_START = 9600;
+final int POND_START = 20000;
 
 Hero hero;
 Camera cam;
@@ -32,7 +33,7 @@ float grassHeight;
 float fenceWidth;
 float fenceSpacing;
 float shift;
-String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?"};
+String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
 
 void setup(){
   //fullScreen();
@@ -148,14 +149,41 @@ void draw(){
       lawn[i].drawGrass(shift+3*grassPatchSize);
       lawn[i].drawGrass(shift+4*grassPatchSize);
     }
-    brood[0].drawWeb();
+    brood[0].drawHomeWeb();
+    int count = 1;
     for(int i = 0; i < brood.length; i++){
       brood[i].drawSpider();
-      brood[i].update(hero.getPosition(), hero.getSize());
+      brood[i].update();
+      if(brood[i].checkCaught(hero.getPosition(), hero.getSize(), brood[0].getPosition())){
+        brood[i].setBounds(brood[0].getBounds());
+      }
+      if(brood[i].getSafe()){
+        count++;
+        if(count == brood.length){
+        //if(count == 2){
+          dialog.setText(stageTwoText[2]);
+          if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
+            dialog.setVisibility(false);
+          }
+          else{
+            dialog.setVisibility(true);
+          }
+          cam.lockOnTo(hero.getPosition().x);
+        }
+      }
     }
     hero.drawHero();
     hero.update();
     popMatrix();
+    
+    if(cam.getY() >= height/2){
+      println(hero.getPosition().y);
+      if(hero.getPosition().y > height/2-height/8){
+        hero.takeDamage();
+      }
+    }
+    
+    /////////////////Dialog handling////////////////////////////////
     if(clock.getElapsedTime() > 3000 && cam.getY() < height/2){
       cam.moveUp();
       if(cam.getY() >= height/2){
@@ -164,8 +192,7 @@ void draw(){
       }
     }
     else if(clock.getElapsedTime() > 3000 && cam.getY() >= height/2){
-      dialog.setVisibility(false);
-      
+      dialog.setVisibility(false);     
     }
     dialog.display();
   }
@@ -214,10 +241,10 @@ void mouseReleased(){
 
 void checkInput(){
   if(keys['A'] || keys['a']){
-    cam.moveLeft();
+    hero.moveLeft();
   }
   if(keys['D'] || keys['d']){
-    cam.moveRight();
+    hero.moveRight();
   }
   if(keys['W'] || keys['w']){
     cam.moveUp();
@@ -260,6 +287,14 @@ int checkGameState(){
     mowerSound.stop();
     return GAME_OVER;
   }
+  if(hero.getHealth() <= 0){
+    return GAME_OVER;
+  }
+  
+  ////////////////////Stage Check//////////////////////////////////
+  if(-cam.getX() >= POND_START){
+    return GAME_STAGE_3;
+  }
   if(-cam.getX() >= FENCE_START+fenceWidth){
     hero.speechBubbleSwitch(false);
     dialog = new Bubble(0, height/6, width, height/6, false);
@@ -274,6 +309,7 @@ int checkGameState(){
 
 void createAudio(){
   mowerSound = new SoundFile(this, "mower.wav");
+  grunt = new SoundFile(this, "grunt.wav");
   mowerSound.amp(amplitude);
 }
 

@@ -3,6 +3,7 @@ class Camera{
   float vel = 8;
   PVector focus;
   boolean locked = true;
+  float location;
   
   Camera(){
     this(0.0,0.0);
@@ -32,7 +33,12 @@ class Camera{
   }
     
   void lockOnTo(float heroX){
-    pos.x = heroX - width/2;
+    if(heroX - pos.x > width/2){
+      this.moveRight();
+    }
+    if(pos.y < 0){
+      this.moveDown();
+    }
   }
     
   void moveLeft(){
@@ -48,11 +54,11 @@ class Camera{
   }
   
   void moveUp(){
-    pos.y -= vel;
+    pos.y -= vel/2;
   }
   
   void moveDown(){
-    pos.y += vel;
+    pos.y += vel/2;
   }
   
   void reset(){
