@@ -1,5 +1,5 @@
 import processing.sound.*;
-SoundFile mowerSound, grunt;
+SoundFile mowerSound, grunt, meow, wee, woo, yay, ok;
 float amplitude = 1;
 
 final int UNIT_SPACING = 50;
@@ -27,6 +27,7 @@ Fence[] fence = new Fence[7];
 Insect[] bugs = new Insect[15];
 Spider[] brood = new Spider[21];
 Mower mower;
+Cat cat;
 float grassPatchSize;
 float weedPatchSize;
 float grassHeight;
@@ -69,13 +70,13 @@ void setup(){
   }
   float[] temp = fence[2].getCoordinates();
   float[]temp2 = fence[3].getCoordinates();
-  brood[0] = new Spider(temp[2], -height/4, true, temp[2], -height/4, temp2[0], (-height/4) + (temp2[0]-temp[2]));
+  brood[0] = new Spider(temp[2], -height/4, true, temp[2], -height/4, temp2[0], (-height/4) + (temp2[0]-temp[2]),0);
   for(int i = 2; i < fence.length; i++){
     temp = fence[i].getCoordinates();
-    brood[(i-2)*4+1] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3]);
-    brood[(i-2)*4+2] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3]);
-    brood[(i-2)*4+3] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3]);
-    brood[(i-2)*4+4] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3]);
+    brood[(i-2)*4+1] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3],0);
+    brood[(i-2)*4+2] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3],1);
+    brood[(i-2)*4+3] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3],2);
+    brood[(i-2)*4+4] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3],3);
   }
 }
 
@@ -172,14 +173,20 @@ void draw(){
         }
       }
     }
+    if(hero.catFollowing){
+      cat.drawCat();
+      cat.update(hero.getPosition());
+    }
     hero.drawHero();
     hero.update();
     popMatrix();
     
     if(cam.getY() >= height/2){
-      println(hero.getPosition().y);
       if(hero.getPosition().y > height/2-height/8){
-        hero.takeDamage();
+        cat.swipe();
+      }
+      else{
+        cat.resetCooldown();
       }
     }
     
@@ -191,8 +198,9 @@ void draw(){
         clock.startTime();
       }
     }
-    else if(clock.getElapsedTime() > 3000 && cam.getY() >= height/2){
-      dialog.setVisibility(false);     
+    else if(clock.getElapsedTime() > 3000 && cam.getY() >= height/2 && !hero.catFollowing){  //cat enters meow
+      dialog.setVisibility(false); 
+      hero.toggleCatFollowing();
     }
     dialog.display();
   }
@@ -225,7 +233,7 @@ void mousePressed(){
       }
     }
   }
-  else if(gameState == GAME_STAGE_2){
+  else if(gameState == GAME_STAGE_2 || gameState == GAME_STAGE_1){
     for(int i = 0; i < fence.length; i++){
       if(fence[i].hitFence(mouseX - cam.getX(), mouseY-cam.getY())){
         hero.fireWeb(mouseX-cam.getX(), mouseY-cam.getY());
@@ -270,8 +278,13 @@ void checkInput(){
   if(keys['2']){
     gameState = GAME_STAGE_2;
     clock.startTime();
+    hero.speechBubbleSwitch(false);
+    dialog = new Bubble(0, height/6, width, height/6, false);
+    dialog.setText(stageTwoText[0]);
+    dialog.setSize(24);
     cam.setPos(FENCE_START + 1.5*fenceWidth, 0);
     hero.setPos(FENCE_START + 1.5*fenceWidth, 0);
+    cat = new Cat(hero.getPosition(), height/2);
     keys['2'] = false;
   }
 }
@@ -295,11 +308,17 @@ int checkGameState(){
   if(-cam.getX() >= POND_START){
     return GAME_STAGE_3;
   }
-  if(-cam.getX() >= FENCE_START+fenceWidth){
-    hero.speechBubbleSwitch(false);
-    dialog = new Bubble(0, height/6, width, height/6, false);
-    dialog.setText(stageTwoText[0]);
-    dialog.setSize(24);
+  if(-cam.getX() >= FENCE_START + 1.5*fenceWidth){
+    if(gameState != GAME_STAGE_2){
+      hero.speechBubbleSwitch(false);
+      dialog = new Bubble(0, height/6, width, height/6, false);
+      dialog.setText(stageTwoText[0]);
+      dialog.setSize(24);
+      clock.startTime();
+      //cam.setPos(FENCE_START + 1.5*fenceWidth, 0);
+      //hero.setPos(FENCE_START + 1.5*fenceWidth, 0);
+      cat = new Cat(new PVector(FENCE_START - 1.5*fenceWidth,0), height/2);
+    }
     return GAME_STAGE_2;
   }
   else{
@@ -310,6 +329,11 @@ int checkGameState(){
 void createAudio(){
   mowerSound = new SoundFile(this, "mower.wav");
   grunt = new SoundFile(this, "grunt.wav");
+  meow = new SoundFile(this, "cat1.wav");
+  wee = new SoundFile(this, "wee.wav");
+  woo = new SoundFile(this, "woo.wav");
+  yay = new SoundFile(this, "yay.wav");
+  ok = new SoundFile(this, "ok.wav");
   mowerSound.amp(amplitude);
 }
 

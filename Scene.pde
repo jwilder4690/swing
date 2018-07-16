@@ -229,11 +229,13 @@ class Spider{
   PVector pos;
   PVector vel;
   float size = 5;
+  int call;
   float scale; 
   float[] bounds;
   float limit;
   float speed;
   float max;
+  float downwardInfluence = 0;
   color bodyColor = color(0,0,0);
   boolean caught;
   boolean safe = false;
@@ -241,7 +243,7 @@ class Spider{
   boolean mother = false;
   Web leash;
   
-  Spider(float x, float y, boolean mom, float a, float b, float c, float d){
+  Spider(float x, float y, boolean mom, float a, float b, float c, float d, int type){
     pos = new PVector(x,y);
     vel = new PVector(0,0);
     if(mom){
@@ -259,6 +261,7 @@ class Spider{
     limit = 8*bounds[3]/9;
     leash = new Web();
     caught = false;
+    call = type;
   }
   
   float[] getBounds(){
@@ -290,27 +293,23 @@ class Spider{
     noStroke();
     ellipse(0,0,size,size);
     popMatrix();    
-    //stroke(255,0,0);
-    //fill(255,0,0);
-    //line(bounds[0],bounds[3]-limit, bounds[2],bounds[3]-limit);
-    lowerLimit();   
+
+    lowerLimit();  
+    //showLimit();
     if(caught){
       leash.drawWeb();
     }
+    
   }
   
   void update(){
     if(caught){
-      if(mother){
-       //freeze, position stops updating
-      }
-      else{
-        pos = leash.update(damping);
-        leash.shortenWeb(); //constantly retracts web
-        if(leash.checkRetracted()){
-          caught = false;
-          limit = 0;
-        }
+      pos = leash.update(damping);
+      leash.shortenWeb(); //constantly retracts web
+      if(leash.checkRetracted()){
+        caught = false;
+        safe = true;
+        limit = 0;
       }
     }
     else{
@@ -332,10 +331,11 @@ class Spider{
         pos.y = bounds[3]-limit;
         vel.y = -vel.y;
       }
+
       
       
       vel.x = constrain(vel.x + random(-speed, speed), -max, max);
-      vel.y = constrain(vel.y + random(-speed, speed), -max, max);
+      vel.y = constrain(vel.y + random(-speed, speed) + downwardInfluence, -max, max);
       
       if(random(1) > .95){
         vel.y = -vel.y;
@@ -343,24 +343,29 @@ class Spider{
       if(random(1) > .95){
         vel.x = -vel.x;
       }
+      
+      if(random(1) > 0.99){
+        downwardInfluence += 0.001;
+      }
     }
   }
   
   boolean checkCaught(PVector heroPos, int heroSize, PVector momPos) {
-    if(pos.dist(heroPos) <= heroSize/2){
+    if(pos.dist(heroPos) <= heroSize/2 && !caught && !safe){
       caught = true;
       leash = new Web(pos.x, pos.y, momPos.x, momPos.y);
       leash.setAngle();
+      switch(call){
+        case 0: wee.play(); break;
+        case 1: woo.play(); break;
+        case 2: yay.play(); break;
+        case 3: ok.play(); break;
+      }
+      
     }
     return caught;
   }
-  
-  void lowerLimit(){
-    if(limit > 0){
-      limit -= 0.1;
-    }
-    else limit = 0;
-  }
+ 
   
   void drawHomeWeb(){
     stroke(55,55,55);
@@ -377,6 +382,80 @@ class Spider{
     popMatrix();
   }
   
+  void lowerLimit(){
+    if(limit > bounds[3]/2){
+      limit -= 0.5;
+    }
+    else limit = bounds[3]/2;
+  }
   
+  void showLimit(){
+    stroke(255,0,0);
+    fill(255,0,0);
+    line(bounds[0],bounds[3]-limit, bounds[2],bounds[3]-limit);
+  }
+}
+
+class Cat{
+  PVector pos;
+  PVector vel;
+  int cooldown = 0;
+  int pace = 0;
+  boolean turn = true;
+  final int LIMIT = 25;
+  int size = 90;
+  color fur = color(200, 100, 0);
   
+  Cat(PVector heroPos, float catHeight){
+    pos = new PVector(heroPos.x - fenceWidth, catHeight);
+    vel = new PVector(2,10);
+  }
+  
+  void drawCat(){
+    println(pos);
+    fill(fur);
+    ellipse(pos.x, pos.y, size, size);
+  }
+  
+  void update(PVector heroPos){
+    pace();
+    if(pos.x-pace > heroPos.x + LIMIT){
+      pos.x -= vel.x*2;
+    }
+    else if(pos.x+pace < heroPos.x - LIMIT){
+      pos.x += vel.x*2;
+    }
+  }
+  
+  void pace(){
+    if(turn){
+      pace += vel.x;
+      pos.x += vel.x;
+      if(pace > LIMIT){
+        turn = !turn;
+      }
+    }
+    else{
+      pace -= vel.x;
+      pos.x -= vel.x;
+      if(pace < -LIMIT){
+        turn = !turn;
+      }
+    }
+  }
+  
+  void swipe(){
+    if(cooldown == 0){
+      cooldown = 60;
+      hero.takeDamage();
+      meow.play();
+    }
+    else{
+      cooldown--;
+    } 
+  }
+  
+  void resetCooldown(){
+    cooldown = 0;
+  }
 }

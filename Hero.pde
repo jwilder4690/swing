@@ -5,6 +5,7 @@ class Hero{
   int tall;
   int wide;
   boolean webHeld = false;
+  boolean catFollowing = false;
   Web currentWeb;
   Web oldWeb;
   int leashLength = 50;
@@ -13,7 +14,6 @@ class Hero{
   float damping = .99;
   float grassDrag = .75;
   int health = 3;
-  int cooldown = 0;
   
   
   //Dialog/////
@@ -53,6 +53,10 @@ int getSize(){
 
 int getHealth(){
   return health;
+}
+
+void toggleCatFollowing(){
+  catFollowing = !catFollowing;
 }
 
 void setPos(float x, float y){
@@ -112,15 +116,8 @@ void update(){
 }
 
 void takeDamage(){
-  if(cooldown == 0){
-    health--;
-    cooldown = 200;
-    grunt.play();
-  }
-  else{
-    cooldown--;
-  }
-  
+  grunt.play();
+  health--;
 }
 
 void fireWeb(float mX, float mY){
