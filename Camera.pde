@@ -58,7 +58,7 @@ class Camera{
   }
   
   void moveDown(){
-    pos.y += vel/2;
+    pos.y += vel/5;
   }
   
   void reset(){

@@ -1,5 +1,5 @@
 import processing.sound.*;
-SoundFile mowerSound, grunt, meow, wee, woo, yay, ok;
+SoundFile mowerSound, grunt, meow, grumble, yowl, wee, woo, yay, ok;
 float amplitude = 1;
 
 final int UNIT_SPACING = 50;
@@ -12,6 +12,7 @@ final int GAME_STAGE_3 = 3;
 final int GAME_OVER = 4;
 final int FENCE_START = 9600;
 final int POND_START = 20000;
+final int ERROR = -45;
 
 Hero hero;
 Camera cam;
@@ -20,14 +21,16 @@ Bubble title;
 Bubble body;
 Bubble dialog;
 int gameState = GAME_START;
+boolean waiting = true;
 boolean[] keys = new boolean[255];
 Dandelion[] weeds;
 Grass[] lawn;
-Fence[] fence = new Fence[7];
+Fence[] fence = new Fence[17];
 Insect[] bugs = new Insect[15];
 Spider[] brood = new Spider[21];
 Mower mower;
 Cat cat;
+Pond pond;
 float grassPatchSize;
 float weedPatchSize;
 float grassHeight;
@@ -37,8 +40,8 @@ float shift;
 String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
 
 void setup(){
-  //fullScreen();
-  size(1080,720);
+  fullScreen();
+  //size(1080,720);
   frameRate(FPS);
   createAudio();
   generateStartScreen();
@@ -51,6 +54,7 @@ void setup(){
   grassHeight = height/9; //also using for fence width
   fenceWidth = height/8;
   fenceSpacing = width/5;
+  pond = new Pond(height/10);
   lawn = new Grass[int(grassPatchSize/Grass.GRASS_WIDTH)];
   weeds = new Dandelion[int(weedPatchSize/UNIT_SPACING)];
   for(int i = 0; i < weeds.length; i++){
@@ -71,7 +75,7 @@ void setup(){
   float[] temp = fence[2].getCoordinates();
   float[]temp2 = fence[3].getCoordinates();
   brood[0] = new Spider(temp[2], -height/4, true, temp[2], -height/4, temp2[0], (-height/4) + (temp2[0]-temp[2]),0);
-  for(int i = 2; i < fence.length; i++){
+  for(int i = 2; i < 7; i++){ //7 are the first fence posts where stage 2 takes place. 
     temp = fence[i].getCoordinates();
     brood[(i-2)*4+1] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3],0);
     brood[(i-2)*4+2] = new Spider(random(temp[0], temp[2]), random(temp[1], 0), false, temp[0], temp[1], temp[2], temp[3],1);
@@ -93,7 +97,7 @@ void draw(){
     translate(cam.getX(),cam.getY());
     shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
     for(int i = 0; i < weeds.length; i++){
-      if(shift+weedPatchSize < FENCE_START){
+      if(shift+weedPatchSize < FENCE_START-1.5*fenceWidth){
         weeds[i].drawDandelion(shift);
         weeds[i].drawDandelion(shift+weedPatchSize);
       }
@@ -137,6 +141,7 @@ void draw(){
   
   ////////////////////////      STAGE 2       ////////////////////////////////
   else if(gameState == GAME_STAGE_2){
+    pond.drawPond();
     pushMatrix();
     translate(cam.getX(),cam.getY());
     for(int i = 0; i < fence.length; i++){
@@ -151,25 +156,34 @@ void draw(){
       lawn[i].drawGrass(shift+4*grassPatchSize);
     }
     brood[0].drawHomeWeb();
-    int count = 1;
+    int count = 0;
     for(int i = 0; i < brood.length; i++){
       brood[i].drawSpider();
       brood[i].update();
       if(brood[i].checkCaught(hero.getPosition(), hero.getSize(), brood[0].getPosition())){
         brood[i].setBounds(brood[0].getBounds());
       }
-      if(brood[i].getSafe()){
+      if(brood[i].getSafe()){  //refactor to wait until cat is gone
         count++;
         if(count == brood.length){
-        //if(count == 2){
-          dialog.setText(stageTwoText[2]);
-          if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
-            dialog.setVisibility(false);
+          //if(count == 2){
+            dialog.setText(stageTwoText[2]);
+            if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
+              dialog.setVisibility(false);
+            }
+            else{
+              dialog.setVisibility(true);
+            }  
+            
+          if(waiting){
+            cat.stopHunting();
+            if(cat.getPosition().x < FENCE_START){
+              waiting = false;
+            }
           }
           else{
-            dialog.setVisibility(true);
+            cam.lockOnTo(hero.getPosition().x);
           }
-          cam.lockOnTo(hero.getPosition().x);
         }
       }
     }
@@ -190,8 +204,8 @@ void draw(){
       }
     }
     
-    /////////////////Dialog handling////////////////////////////////
-    if(clock.getElapsedTime() > 3000 && cam.getY() < height/2){
+    ///////////////////////Dialog handling////////////////////////////////
+    if(clock.getElapsedTime() > 3000 && cam.getY() < height/2 && waiting){
       cam.moveUp();
       if(cam.getY() >= height/2){
         dialog.setText(stageTwoText[1]);
@@ -201,6 +215,7 @@ void draw(){
     else if(clock.getElapsedTime() > 3000 && cam.getY() >= height/2 && !hero.catFollowing){  //cat enters meow
       dialog.setVisibility(false); 
       hero.toggleCatFollowing();
+      yowl.play();
     }
     dialog.display();
   }
@@ -293,15 +308,22 @@ int checkGameState(){
   if(gameState == GAME_START){
     return GAME_START;
   }
-  float distance = mower.checkDistance(hero.getPosition());
-  amplitude = map(distance, 0, width, 2, 0.5); //neat 
-  mowerSound.amp(amplitude);
-  if(distance <= 0){
-    mowerSound.stop();
+  else if(gameState == GAME_OVER){
     return GAME_OVER;
   }
-  if(hero.getHealth() <= 0){
-    return GAME_OVER;
+  else if(gameState == GAME_STAGE_1){
+    float distance = mower.checkDistance(hero.getPosition());
+    amplitude = map(distance, 0, width, 2, 0.5); //neat 
+    mowerSound.amp(amplitude);
+    if(distance <= 0){
+      mowerSound.stop();
+      return GAME_OVER;
+    }
+  }
+  else if(gameState == GAME_STAGE_2){
+    if(hero.getHealth() <= 0){
+      return GAME_OVER;
+    }
   }
   
   ////////////////////Stage Check//////////////////////////////////
@@ -330,6 +352,8 @@ void createAudio(){
   mowerSound = new SoundFile(this, "mower.wav");
   grunt = new SoundFile(this, "grunt.wav");
   meow = new SoundFile(this, "cat1.wav");
+  grumble = new SoundFile(this, "catGrumble.mp3");
+  yowl = new SoundFile(this, "catEntrance.mp3");
   wee = new SoundFile(this, "wee.wav");
   woo = new SoundFile(this, "woo.wav");
   yay = new SoundFile(this, "yay.wav");
