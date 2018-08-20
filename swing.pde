@@ -21,6 +21,7 @@ Bubble title;
 Bubble body;
 Bubble dialog;
 int gameState = GAME_START;
+int progress = GAME_START;
 boolean waiting = true;
 boolean[] keys = new boolean[255];
 Dandelion[] weeds;
@@ -40,8 +41,8 @@ float shift;
 String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
 
 void setup(){
-  fullScreen();
-  //size(1080,720);
+  //fullScreen();
+  size(1080,720);
   frameRate(FPS);
   createAudio();
   generateStartScreen();
@@ -163,30 +164,32 @@ void draw(){
       if(brood[i].checkCaught(hero.getPosition(), hero.getSize(), brood[0].getPosition())){
         brood[i].setBounds(brood[0].getBounds());
       }
-      if(brood[i].getSafe()){  //refactor to wait until cat is gone
+      if(brood[i].getSafe()){  
         count++;
-        if(count == brood.length){
-          //if(count == 2){
-            dialog.setText(stageTwoText[2]);
-            if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
-              dialog.setVisibility(false);
-            }
-            else{
-              dialog.setVisibility(true);
-            }  
-            
-          if(waiting){
-            cat.stopHunting();
-            if(cat.getPosition().x < FENCE_START){
-              waiting = false;
-            }
-          }
-          else{
-            cam.lockOnTo(hero.getPosition().x);
-          }
-        }
       }
     }
+    
+    //if(count == 2){
+    if(count == brood.length){
+      dialog.setText(stageTwoText[2]);
+      if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
+        dialog.setVisibility(false);
+      }
+      else{
+        dialog.setVisibility(true);
+      }  
+      
+      if(waiting){
+        cat.stopHunting();
+        if(cat.getPosition().x < FENCE_START){
+          waiting = false;
+        }
+      }
+      else{
+        cam.lockOnTo(hero.getPosition().x);
+      }
+    }
+
     if(hero.catFollowing){
       cat.drawCat();
       cat.update(hero.getPosition());
@@ -205,6 +208,9 @@ void draw(){
     }
     
     ///////////////////////Dialog handling////////////////////////////////
+    if(clock.getElapsedTime() > 2000 && !hero.webHeld && clock.getElapsedTime() < 6000){
+      hero.fireWeb(FENCE_START + 5*fenceWidth, -height/4);
+    }
     if(clock.getElapsedTime() > 3000 && cam.getY() < height/2 && waiting){
       cam.moveUp();
       if(cam.getY() >= height/2){
@@ -279,19 +285,46 @@ void checkInput(){
     hero.retractWeb();
   }
   if(keys['R'] || keys['r']){
-    clock.startTime();
-    hero.reset();
-    cam.reset();
-    mower.reset();
-    for(int i = 0; i < bugs.length; i++){
-      bugs[i].reset();
+    switch(progress){
+      case GAME_START: 
+      case GAME_STAGE_1:{
+        clock.startTime();
+        hero.reset();
+        cam.reset();
+        mower.reset();
+        for(int i = 0; i < bugs.length; i++){
+          bugs[i].reset();
+        }
+        gameState = GAME_STAGE_1;
+        progress = GAME_STAGE_1;
+        break;
+      }
+    case GAME_STAGE_2: {
+      gameState = GAME_STAGE_2;
+      progress = GAME_STAGE_2;
+      hero.reset();
+      clock.startTime();
+      hero.speechBubbleSwitch(false);
+      dialog = new Bubble(0, height/6, width, height/6, false);
+      dialog.setText(stageTwoText[0]);
+      dialog.setSize(24);
+      cam.setPos(FENCE_START + 1.5*fenceWidth, 0);
+      hero.setPos(FENCE_START + 1.5*fenceWidth, 0);
+      cat.reset(hero.getPosition(), height/2);
+      for(int i = 1; i < brood.length; i++){
+        brood[i].reset();
+      }
     }
-    gameState = GAME_STAGE_1;
-    keys['r'] = false;
+    default:  break;
+    }
+    keys['r'] = false; 
     keys['R'] = false;
   }
+  
+  /////////////////////////Testing use only///////////////////////////
   if(keys['2']){
     gameState = GAME_STAGE_2;
+    progress = GAME_STAGE_2;
     clock.startTime();
     hero.speechBubbleSwitch(false);
     dialog = new Bubble(0, height/6, width, height/6, false);
@@ -328,6 +361,7 @@ int checkGameState(){
   
   ////////////////////Stage Check//////////////////////////////////
   if(-cam.getX() >= POND_START){
+    progress = GAME_STAGE_3;
     return GAME_STAGE_3;
   }
   if(-cam.getX() >= FENCE_START + 1.5*fenceWidth){
@@ -341,9 +375,11 @@ int checkGameState(){
       //hero.setPos(FENCE_START + 1.5*fenceWidth, 0);
       cat = new Cat(new PVector(FENCE_START - 1.5*fenceWidth,0), height/2);
     }
+    progress = GAME_STAGE_2;
     return GAME_STAGE_2;
   }
   else{
+    progress = GAME_STAGE_1;
     return GAME_STAGE_1;
   }
 }

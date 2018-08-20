@@ -73,6 +73,21 @@ class Fence{
   }
 }
 
+class Pond{
+  int wide = 8000;
+  int tall;
+  color waterColor = color(0,50,255);
+  
+  Pond(int high){
+    tall = high;
+  }
+  
+  void drawPond(){
+    fill(waterColor);
+    rect(POND_START, height - tall, wide, tall);
+  }
+}
+
 class Grass{
   public static final float GRASS_WIDTH = 10;
   float grassLength;
@@ -106,16 +121,26 @@ class Mower{
   PVector startPos;
   float angle;
   float size;
+  float startPoint = 0;
+  boolean phase1, phase2, phase3;
   
   Mower(float x, float y, float big){
     pos = new PVector(x,y);
     startPos = new PVector(x,y);
     angle = 0;
     size = big;
+    phase1 = true;
+    phase2 = false;
+    phase3 = false;
   }
   
   float getVelocity(){
     return velocity;
+  }
+  
+  float checkDistance(PVector heroPos){
+    float distance = heroPos.dist(pos);
+    return distance - (size/2);    
   }
   
   void drawMower(){
@@ -142,27 +167,31 @@ class Mower{
     popMatrix();
   }
   
-  float checkDistance(PVector heroPos){
-    float distance = heroPos.dist(pos);
-    return distance - (size/2);    
-  }
-  
   void update(){
     angle += velocity/size;
     pos.add(velocity,0);
     velocity += acceleration;
-    if(clock.getElapsedTime() > 15000){
+    if(-cam.getX() > 2600 && phase1){
       acceleration = 0.005; 
-      if(clock.getElapsedTime() >37000){
-        acceleration = -0.1;
-        //acceleration = 0;
-        //velocity = 7.5;
-        if(clock.getElapsedTime() > 45000){
-          acceleration = 0;
-          velocity = 8;
-        }
-      }
+      phase1 = false;
+      phase2 = true;
     }
+    if(screenOverlap(-cam.getX()) > width/3 && phase2){
+      acceleration = -0.1;
+      phase2 = false;
+      phase3 = true;
+    }
+    if(screenOverlap(-cam.getX()) < -width*1.5 && phase3){
+      acceleration = 0;
+      velocity = 8;
+      mowerSound.stop();
+      phase3 = false;
+    }
+  }
+  
+  float screenOverlap(float camX){     //use arg of zero to maintain original start point
+    float overlap = pos.x - camX;
+    return  overlap;
   }
   
   void reset(){
@@ -171,7 +200,11 @@ class Mower{
     angle = 0;
     acceleration = 0;
     velocity = 8;
+    startPoint = 0;
     mowerSound.loop();
+    phase1 = true;
+    phase2 = false;
+    phase3 = false;
   }
 }
 
@@ -226,31 +259,37 @@ class Insect{
 
 class Spider{
 
-  PVector pos;
-  PVector vel;
+  Web leash;
   float size = 5;
   int call;
   float scale; 
+  float max;
+  color bodyColor = color(0,0,0);
+  float damping = 0.95;
+  boolean mother = false;
+  PVector startPos;
+  float[] startBounds;
+  
+  PVector pos;
+  PVector vel;
   float[] bounds;
   float limit;
   float speed;
-  float max;
-  float downwardInfluence = 0;
-  color bodyColor = color(0,0,0);
-  boolean caught;
   boolean safe = false;
-  float damping = 0.95;
-  boolean mother = false;
-  Web leash;
+  float downwardInfluence = 0;
+  boolean caught;
+  
   
   Spider(float x, float y, boolean mom, float a, float b, float c, float d, int type){
     pos = new PVector(x,y);
+    startPos = new PVector(x,y);
     vel = new PVector(0,0);
     if(mom){
       mother = true;
       scale = 3;
       max = 1;
       speed = .1;
+      safe = true;
     }
     else{
       scale = 1;
@@ -258,6 +297,7 @@ class Spider{
       max = 2;
     }
     bounds = new float[] {a,b,c,d};
+    startBounds = new float[] {a,b,c,d};
     limit = 8*bounds[3]/9;
     leash = new Web();
     caught = false;
@@ -309,6 +349,7 @@ class Spider{
       if(leash.checkRetracted()){
         caught = false;
         safe = true;
+        downwardInfluence = 0;
         limit = 0;
       }
     }
@@ -344,7 +385,7 @@ class Spider{
         vel.x = -vel.x;
       }
       
-      if(random(1) > 0.99){
+      if(random(1) > 0.99 && !safe){
         downwardInfluence += 0.001;
       }
     }
@@ -394,54 +435,120 @@ class Spider{
     fill(255,0,0);
     line(bounds[0],bounds[3]-limit, bounds[2],bounds[3]-limit);
   }
+  
+  void reset(){
+    pos = new PVector(startPos.x, startPos.y);
+    vel = new PVector(0,0);
+    bounds = startBounds;
+    limit = 8*bounds[3]/9;;
+    speed = .2;
+    safe = false;
+    downwardInfluence = 0;
+    caught = false;
+  }
 }
 
 class Cat{
-  PVector pos;
-  PVector vel;
-  int cooldown = 0;
-  int pace = 0;
-  boolean turn = true;
+  final int RIGHT_PACE = 1;
+  final int LEFT_PACE = -1;
   final int LIMIT = 25;
   int size = 90;
   color fur = color(200, 100, 0);
+  color nose = color(255, 175,175);
+  
+  PVector pos;
+  PVector vel;
+  int cooldown = 0;
+  PVector pacePoint;
+  boolean hunting = true;
+  boolean pacing = false;
+  int pace = 0;
+  int direction = RIGHT_PACE;
+  
+  
+
   
   Cat(PVector heroPos, float catHeight){
-    pos = new PVector(heroPos.x - fenceWidth, catHeight);
+    pos = new PVector(heroPos.x - fenceWidth, catHeight - size/4);
     vel = new PVector(2,10);
   }
   
   void drawCat(){
-    println(pos);
     fill(fur);
-    ellipse(pos.x, pos.y, size, size);
+    pushMatrix();
+    translate(pos.x + pace, pos.y);
+    scale(direction, 1);
+    stroke(0,0,0);
+    triangle(- size/4, - (6*size/9), size/7, 0,-(3*size/7), 0);
+    ellipse(0, 0, size, size);
+    noStroke();
+    triangle((3*size/28), -(4*size/7), 0, -size/4, (2*size/7), -size/4);
+    stroke(0,0,0);
+    //ear lines
+    line((3*size/28), -(4*size/7), 0, -size/4);
+    line((3*size/28), -(4*size/7), (2*size/7), -size/4);
+    //whiskers 
+    line(size/2 - 8, -6, (3*size/28), -10);
+    line(size/2 - 8, - 3, (3*size/28) - 4, 0);
+    line(size/2 - 8, 0, (3*size/28), 10);
+    fill(nose);
+    triangle(size/2, 2, size/2 - 4, -6, size/2 + 2, -6);
+    popMatrix();
+  }
+  
+  PVector getPosition(){
+    return pos;
   }
   
   void update(PVector heroPos){
-    pace();
-    if(pos.x-pace > heroPos.x + LIMIT){
-      pos.x -= vel.x*2;
+    if(hunting){
+      if(abs(pos.x - heroPos.x) < LIMIT){
+        pacing = true;
+      }
+      else{
+        pacing = false;
+      }
+      
+      if(pacing){
+        pace();
+      }
+      else{
+        if(pos.x > heroPos.x){
+          moveLeft();
+        }
+        else if(pos.x < heroPos.x){
+          moveRight();
+        }
+      }
     }
-    else if(pos.x+pace < heroPos.x - LIMIT){
-      pos.x += vel.x*2;
+    else{
+      moveLeft();
     }
   }
   
   void pace(){
-    if(turn){
+    if(direction == RIGHT_PACE){
       pace += vel.x;
-      pos.x += vel.x;
       if(pace > LIMIT){
-        turn = !turn;
+        direction = LEFT_PACE;
       }
     }
     else{
       pace -= vel.x;
-      pos.x -= vel.x;
       if(pace < -LIMIT){
-        turn = !turn;
+        direction = RIGHT_PACE;
       }
     }
+  }
+  
+  void moveLeft(){
+    pos.x -= vel.x*2;
+    direction = LEFT_PACE;
+  }
+  
+  void moveRight(){
+    pos.x += vel.x*2;
+    direction = RIGHT_PACE;
   }
   
   void swipe(){
@@ -455,7 +562,25 @@ class Cat{
     } 
   }
   
+  void stopHunting(){
+    if(hunting){
+      grumble.play();
+      hunting = false;
+    }
+    
+  }
+  
   void resetCooldown(){
     cooldown = 0;
+  }
+  
+  void reset(PVector heroPos, float catHeight){
+    pos = new PVector(heroPos.x - fenceWidth, catHeight - size/4);
+    vel = new PVector(2,10);
+    hunting = true;
+    pacing = false;
+    pace = 0; 
+    cooldown = 0;
+    direction = RIGHT_PACE;
   }
 }

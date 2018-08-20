@@ -153,6 +153,8 @@ void moveRight(){
 }
 
 void reset(){
+  health = 3;
+  catFollowing = false;
   webHeld = false;
   pos = new PVector(startPos.x, startPos.y);
   vel = new PVector(0,0);
