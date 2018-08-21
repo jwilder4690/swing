@@ -41,8 +41,8 @@ float shift;
 String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
 
 void setup(){
-  //fullScreen();
-  size(1080,720);
+  fullScreen();
+  //size(1080,720);
   frameRate(FPS);
   createAudio();
   generateStartScreen();
@@ -98,11 +98,11 @@ void draw(){
     translate(cam.getX(),cam.getY());
     shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
     for(int i = 0; i < weeds.length; i++){
-      if(shift+weedPatchSize < FENCE_START-1.5*fenceWidth){
+      if(shift+weedPatchSize < FENCE_START){
         weeds[i].drawDandelion(shift);
         weeds[i].drawDandelion(shift+weedPatchSize);
       }
-      else{
+      else if(shift < FENCE_START){
         weeds[i].drawDandelion(shift);
       }
     }
@@ -199,7 +199,7 @@ void draw(){
     popMatrix();
     
     if(cam.getY() >= height/2){
-      if(hero.getPosition().y > height/2-height/8){
+      if(cat.insideRange(hero.getPosition(), hero.getSize())){
         cat.swipe();
       }
       else{
@@ -254,7 +254,7 @@ void mousePressed(){
       }
     }
   }
-  else if(gameState == GAME_STAGE_2 || gameState == GAME_STAGE_1){
+  if(gameState == GAME_STAGE_2 || gameState == GAME_STAGE_1){
     for(int i = 0; i < fence.length; i++){
       if(fence[i].hitFence(mouseX - cam.getX(), mouseY-cam.getY())){
         hero.fireWeb(mouseX-cam.getX(), mouseY-cam.getY());

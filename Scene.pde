@@ -392,7 +392,7 @@ class Spider{
   }
   
   boolean checkCaught(PVector heroPos, int heroSize, PVector momPos) {
-    if(pos.dist(heroPos) <= heroSize/2 && !caught && !safe){
+    if(pos.dist(heroPos) <= heroSize/2 + size/2 && !caught && !safe){
       caught = true;
       leash = new Web(pos.x, pos.y, momPos.x, momPos.y);
       leash.setAngle();
@@ -453,6 +453,7 @@ class Cat{
   final int LEFT_PACE = -1;
   final int LIMIT = 25;
   int size = 90;
+  int swipeRange = size+30;
   color fur = color(200, 100, 0);
   color nose = color(255, 175,175);
   
@@ -549,6 +550,13 @@ class Cat{
   void moveRight(){
     pos.x += vel.x*2;
     direction = RIGHT_PACE;
+  }
+  
+  boolean insideRange(PVector heroPos, float heroSize){
+    if(pos.dist(heroPos) < swipeRange/2 + heroSize/2){
+      return true;
+    }
+    else return false;
   }
   
   void swipe(){
