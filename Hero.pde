@@ -97,7 +97,7 @@ void update(){
     pos.x += vel.x;
   }
   //////////////////////////////Dialog///////////////////////////////////////////////////////
-  if(gameState == GAME_STAGE_1){
+  if(gameState == Game.STAGE_1){
     if(clock.getElapsedTime() / interval > 0 && interval < 100000){
       interval += INTERVAL_STEP;
       duration = 124;

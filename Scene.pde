@@ -35,6 +35,46 @@ class Dandelion{
  } 
 }
 
+class Cattail{
+  color stemColor = color(50, 255, 100);
+  color topColor = color(102, 51, 0);
+  
+  float xPos;
+  float yPos;
+  float wide;
+  float tall;
+  
+  Cattail(float x, float y, float thick){
+    xPos = x;
+    yPos = y;
+    wide = thick;
+    tall = thick*4;
+  }
+  
+  void drawCattail(float shift){
+    noStroke();
+    pushMatrix();
+    translate(POND_START, 0);
+    fill(stemColor);
+    rect(xPos + (wide/2-wide/5), yPos - wide/2, 2*wide/5, height);
+    fill(topColor);
+    rect(xPos + (wide/2 - wide/10), yPos - tall - wide/2, wide/5, wide, wide/10, wide/10, 0,0);
+    rect(xPos, yPos - tall, wide, tall, wide/2,wide/2,wide/2,wide/2);
+    popMatrix();
+ }
+ 
+   boolean hitCattail(float x, float y, float shift){ //shift? weedPatchSize? 
+    if(x < xPos+shift || x > xPos + shift + wide){
+      return false; 
+    }
+    if(y < yPos - tall || y > yPos){
+      return false;
+    }
+    return true;
+  }
+ 
+}
+
 class Fence{
   float xPos;
   float yPos;
