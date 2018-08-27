@@ -48,13 +48,13 @@ class Cattail{
     xPos = x;
     yPos = y;
     wide = thick;
-    tall = thick*4;
+    tall = thick*3.5;
   }
   
   void drawCattail(float shift){
     noStroke();
     pushMatrix();
-    translate(POND_START, 0);
+    translate(shift, 0);
     fill(stemColor);
     rect(xPos + (wide/2-wide/5), yPos - wide/2, 2*wide/5, height);
     fill(topColor);
@@ -115,10 +115,10 @@ class Fence{
 
 class Pond{
   int wide = 8000;
-  int tall;
+  float tall;
   color waterColor = color(0,50,255);
   
-  Pond(int high){
+  Pond(float high){
     tall = high;
   }
   
@@ -211,7 +211,7 @@ class Mower{
     angle += velocity/size;
     pos.add(velocity,0);
     velocity += acceleration;
-    if(-cam.getX() > 2600 && phase1){
+    if(-cam.getX() > FENCE_START/3 && phase1){
       acceleration = 0.005; 
       phase1 = false;
       phase2 = true;

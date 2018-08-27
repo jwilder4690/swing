@@ -1,6 +1,10 @@
 class Camera{
+  
+  final int MAX_VELOCITY = 7;
   PVector pos;
   float vel = 8;
+  float acceleration = .2;
+  float adjust;
   PVector focus;
   boolean locked = true;
   float location;
@@ -31,11 +35,24 @@ class Camera{
   void setVelocity(float rate){
     vel = rate;
   }
+  
+  void accelerate(float adjust){
+    vel += adjust;
+    if(vel < 0) vel = 0;
+    if(vel > MAX_VELOCITY) vel = MAX_VELOCITY;
+    println(vel);
+  }
     
   void lockOnTo(float heroX){
-    if(heroX - pos.x > width/2){
-      this.moveRight();
-    }
+    
+    adjust = map(heroX - pos.x, 3*width/7, width - width/5, -acceleration, acceleration);
+    accelerate(adjust);
+    this.moveRight();
+
+    //if(heroX - pos.x > width/2){
+    //  this.moveRight();
+    //}
+    
     if(pos.y < 0){
       this.moveDown();
     }
@@ -49,8 +66,8 @@ class Camera{
     pos.x += vel;
   }
   
-  void moveRight(float speed){
-    pos.x += speed;
+  void moveRight(float accel){
+    pos.x += vel + accel;
   }
   
   void moveUp(){
@@ -59,6 +76,9 @@ class Camera{
   
   void moveDown(){
     pos.y += vel/5;
+    if(pos.y > 0){
+      pos.y = 0;
+    }
   }
   
   void reset(){

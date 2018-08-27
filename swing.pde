@@ -6,14 +6,9 @@ final int UNIT_SPACING = 50;
 final float GRAVITY = -9.8/(UNIT_SPACING/2);
 final int FPS = 24;
 enum Game {START, STAGE_1, STAGE_2, STAGE_3, OVER}
-//final int GAME_START = 0;
-//final int GAME_STAGE_1 = 1;
-//final int GAME_STAGE_2 = 2;
-//final int GAME_STAGE_3 = 3;
-//final int GAME_OVER = 4;
-final int FENCE_START = 9600;
-final int POND_START = 15000;
 final int ERROR = -45;
+int FENCE_START;
+int POND_START;
 
 Hero hero;
 Camera cam;
@@ -28,7 +23,7 @@ boolean[] keys = new boolean[255];
 Dandelion[] weeds;
 Cattail[] waterWeeds;
 Grass[] lawn;
-Fence[] fence = new Fence[18];
+Fence[] fence;
 Insect[] bugs = new Insect[15];
 Spider[] brood = new Spider[21];
 Mower mower;
@@ -42,10 +37,13 @@ float fenceSpacing;
 float shift;
 String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
 
+
 void setup(){
   fullScreen();
   //size(1080,720);
   frameRate(FPS);
+  FENCE_START = width*9;
+  POND_START = width*15;
   createAudio();
   generateStartScreen();
   hero = new Hero(width/2, 0, UNIT_SPACING);
@@ -57,15 +55,16 @@ void setup(){
   grassHeight = height/9; //also using for fence width
   fenceWidth = height/8;
   fenceSpacing = width/5;
-  pond = new Pond(height/10);
+  pond = new Pond(grassHeight);
+  fence = new Fence[int(5*((POND_START-FENCE_START)/width))+1]; 
   lawn = new Grass[int(grassPatchSize/Grass.GRASS_WIDTH)];
   weeds = new Dandelion[int(weedPatchSize/UNIT_SPACING)];
   waterWeeds = new Cattail[int(weedPatchSize/UNIT_SPACING)];
   for(int i = 0; i < weeds.length; i++){
-    weeds[i] = new Dandelion(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, UNIT_SPACING*3)));
+    weeds[i] = new Dandelion(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, 3*UNIT_SPACING)));
   }
   for(int i = 0; i < waterWeeds.length; i++){
-    waterWeeds[i] = new Cattail(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), random(UNIT_SPACING/2, 2*UNIT_SPACING/3));
+    waterWeeds[i] = new Cattail(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, 3*height/7), random(0.7*UNIT_SPACING, UNIT_SPACING));
   }
   for(int i = 0; i < lawn.length; i++){
     lawn[i] = new Grass(random(0.9*grassHeight,grassHeight), i);
@@ -148,13 +147,14 @@ void draw(){
   
   ////////////////////////      STAGE 2       ////////////////////////////////
   else if(gameState == Game.STAGE_2){
-    pond.drawPond();
     pushMatrix();
     translate(cam.getX(),cam.getY());
     shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
-    for(int i = 0; i < waterWeeds.length; i++){
-        waterWeeds[i].drawCattail(shift);
-        waterWeeds[i].drawCattail(shift+weedPatchSize);
+    if(shift >= POND_START - weedPatchSize){
+      for(int i = 0; i < waterWeeds.length; i++){
+          waterWeeds[i].drawCattail(shift+weedPatchSize);
+          waterWeeds[i].drawCattail(shift+2*weedPatchSize);
+      }
     }
     for(int i = 0; i < fence.length; i++){
       fence[i].drawFence();
@@ -167,6 +167,7 @@ void draw(){
       lawn[i].drawGrass(shift+3*grassPatchSize);
       lawn[i].drawGrass(shift+4*grassPatchSize);
     }
+    pond.drawPond();
     brood[0].drawHomeWeb();
     int count = 0;
     for(int i = 0; i < brood.length; i++){
@@ -180,7 +181,7 @@ void draw(){
       }
     }
     
-    if(count == 2){
+    if(count >= 1){
     //if(count == brood.length){
       dialog.setText(stageTwoText[2]);
       if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
@@ -206,7 +207,7 @@ void draw(){
       cat.update(hero.getPosition());
     }
     hero.drawHero();
-    println(hero.getPosition() + " vs " + shift);
+    println("Shift: "+ shift + "and Cam x: " + cam.getX());
     hero.update();
     popMatrix();
     
@@ -236,6 +237,31 @@ void draw(){
       yowl.play();
     }
     dialog.display();
+  }
+  else if(gameState == Game.STAGE_3){
+
+    pushMatrix();
+    translate(cam.getX(),cam.getY());
+    //Add tall grass?
+    //shift = floor(-cam.getX()/grassPatchSize)*grassPatchSize;  
+    //for(int i = 0; i < lawn.length; i++){
+    //  lawn[i].drawGrass(shift);
+    //  lawn[i].drawGrass(shift+grassPatchSize);
+    //  lawn[i].drawGrass(shift+2*grassPatchSize);
+    //  lawn[i].drawGrass(shift+3*grassPatchSize);
+    //  lawn[i].drawGrass(shift+4*grassPatchSize);
+    //}
+    shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+    for(int i = 0; i < waterWeeds.length; i++){
+          waterWeeds[i].drawCattail(shift);
+          waterWeeds[i].drawCattail(shift+weedPatchSize);
+    }
+    pond.drawPond();
+    hero.drawHero();
+    hero.update();
+    popMatrix();
+    
+    cam.lockOnTo(hero.getPosition().x);
   }
   else if(gameState == Game.OVER){
    background(0,0,0);
@@ -274,7 +300,15 @@ void mousePressed(){
     }
     float shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
     for(int i = 0; i < waterWeeds.length; i++){
-      if(waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift)){
+      if(waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift)|| waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift+weedPatchSize)){
+        hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
+      }
+    }
+  }
+  if(gameState == Game.STAGE_3){
+    float shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+    for(int i = 0; i < waterWeeds.length; i++){
+      if(waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift)|| waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift+weedPatchSize)){
         hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
       }
     }
@@ -352,6 +386,14 @@ void checkInput(){
     hero.setPos(FENCE_START + 1.5*fenceWidth, 0);
     cat = new Cat(hero.getPosition(), height/2);
     keys['2'] = false;
+  }
+  if(keys['3']){
+    gameState = Game.STAGE_3;
+    progress = Game.STAGE_3;
+    hero.speechBubbleSwitch(false);
+    hero.setPos(POND_START, 0);
+    cam.setPos(POND_START, 0);
+    keys['3'] = false;
   }
 }
   
