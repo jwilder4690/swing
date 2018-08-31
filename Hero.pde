@@ -9,6 +9,7 @@ class Hero{
   Web currentWeb;
   Web oldWeb;
   int leashLength = 50;
+  float groundLevel;
   final int TERMINAL_VELOCITY = 20;
   final float DRIFT_SPEED = .1;
   float damping = .99;
@@ -37,6 +38,7 @@ Hero(float x, float y, int scale){
   speechBubble.setText(quotes[0]);
   speechBubble.setSize(24);
   speechBubble.adjustToText();
+  groundLevel = height - grassHeight;
 }
 
 PVector getPosition(){
@@ -55,12 +57,20 @@ int getHealth(){
   return health;
 }
 
+void setHealth(int hp){
+  health = hp;
+}
+
 void toggleCatFollowing(){
   catFollowing = !catFollowing;
 }
 
 void setPos(float x, float y){
   pos.set(x,y);
+}
+
+void setGroundLevel(float ground){
+  groundLevel = ground;
 }
 
 void drawHero(){
@@ -77,14 +87,14 @@ void drawHero(){
 
 void update(){
   /////////////////////////////////Position////////////////////////////////////////////
-  if(pos.y > height-grassHeight){
+  if(pos.y > groundLevel){
     if(webHeld){
-    pos = currentWeb.update(grassDrag);
-    currentWeb.shortenWeb(); //constantly retracts web
-    currentWeb.shortenWeb();
+      pos = currentWeb.update(grassDrag);
+      currentWeb.shortenWeb(); //constantly retracts web
+      currentWeb.shortenWeb();
     }
     else{
-      pos.y =  height-0.9*grassHeight;
+      pos.y = groundLevel+wide/2;
     }
   }
   else if(webHeld){

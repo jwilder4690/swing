@@ -114,17 +114,49 @@ class Fence{
 }
 
 class Pond{
-  int wide = 8000;
+  int wide;
   float tall;
   color waterColor = color(0,50,255);
   
   Pond(float high){
     tall = high;
+    wide = POND_FINAL - POND_START + width*2;
+  }
+  
+  float waterLevel(){
+    return height-tall;
   }
   
   void drawPond(){
     fill(waterColor);
     rect(POND_START, height - tall, wide, tall);
+  }
+}
+
+class LillyPad{
+  PVector pos;
+  float angle;
+  float wide;
+  float tall;
+  color shade = color(25, 205, 100);
+  
+  LillyPad(float x, float y, float size, float rotation){
+    pos = new PVector(x,y);
+    wide = size;
+    tall = size/4;
+    angle = rotation;
+  }
+  
+  float getHeight(){
+    return pos.y;
+  }
+  
+  void drawLillyPad(){
+    pushMatrix();
+    translate(pos.x, pos.y);
+    fill(shade);
+    arc(0,0, wide, tall, angle, angle+(15*PI/8), PIE);
+    popMatrix();
   }
 }
 
@@ -145,6 +177,16 @@ class Grass{
     pushMatrix();
     translate(shift, 0);
     quad(coords[0], coords[1], coords[2], coords[3], coords[4], coords[5], coords[6], coords[7]);
+    popMatrix();
+  }
+  
+  void drawTallGrass(float shift){
+    noStroke();
+    fill(50,100,50);
+    pushMatrix();
+    translate(shift, 0);
+    //arc(GRASS_WIDTH, height/2, GRASS_WIDTH*2, height, HALF_PI, 3*HALF_PI, CHORD); //lags O_o
+    triangle(0, height, GRASS_WIDTH, height, GRASS_WIDTH/2, height/4);
     popMatrix();
   }
 
