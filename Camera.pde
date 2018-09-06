@@ -40,7 +40,6 @@ class Camera{
     vel += adjust;
     if(vel < 0) vel = 0;
     if(vel > MAX_VELOCITY) vel = MAX_VELOCITY;
-    println(vel);
   }
     
   void lockOnTo(float heroX){

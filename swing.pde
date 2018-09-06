@@ -66,12 +66,16 @@ void setup(){
   lawn = new Grass[int(grassPatchSize/Grass.GRASS_WIDTH)];
   waterGrass = new Grass[int(grassPatchSize/Grass.GRASS_WIDTH)];
   weeds = new Dandelion[int(weedPatchSize/UNIT_SPACING)];
-  waterWeeds = new Cattail[int(weedPatchSize/UNIT_SPACING)];
+  waterWeeds = new Cattail[int(weedPatchSize/UNIT_SPACING)+2];
   for(int i = 0; i < weeds.length; i++){
     weeds[i] = new Dandelion(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, 3*UNIT_SPACING)));
   }
-  for(int i = 0; i < waterWeeds.length; i++){
-    waterWeeds[i] = new Cattail(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, 3*height/7), random(0.7*UNIT_SPACING, UNIT_SPACING));
+  waterWeeds[0] = new Cattail(3*UNIT_SPACING, height/4, UNIT_SPACING);
+  waterWeeds[1] = new Cattail(-UNIT_SPACING/2, height/4, UNIT_SPACING);
+  waterWeeds[0].setForeground();
+  waterWeeds[1].setForeground();
+  for(int i = 2; i < waterWeeds.length; i++){
+    waterWeeds[i] = new Cattail((i-2)*UNIT_SPACING+random(UNIT_SPACING/2), random(0, 3*height/7), random(0.7*UNIT_SPACING, UNIT_SPACING));
   }
   for(int i = 0; i < lawn.length; i++){
     lawn[i] = new Grass(random(0.9*grassHeight,grassHeight), i);
@@ -99,7 +103,7 @@ void setup(){
   }
   pads[0] = new LillyPad(POND_FINAL, height - height/20, padSize, 0);
   for(int i = 1; i < pads.length; i++){
-      pads[i] = new LillyPad((POND_START+width+padSize)+random(0,POND_FINAL-POND_START), random(height - height/10, height), padSize, random(0,TWO_PI));
+      pads[i] = new LillyPad((POND_START+width+padSize)+random(0,POND_FINAL-POND_START), random(height - height/15, height), padSize, random(0,TWO_PI));
   }
 }
 
@@ -171,7 +175,7 @@ void draw(){
         waterGrass[i].drawGrass(POND_START+3*grassPatchSize);
         waterGrass[i].drawGrass(POND_START+4*grassPatchSize);
       }
-      for(int i = 0; i < waterWeeds.length; i++){
+      for(int i = 2; i < waterWeeds.length; i++){
           waterWeeds[i].drawCattail(POND_START);
           waterWeeds[i].drawCattail(POND_START+weedPatchSize);
       }
@@ -227,7 +231,6 @@ void draw(){
       cat.update(hero.getPosition());
     }
     hero.drawHero();
-    println("Shift: "+ shift + "and Cam x: " + cam.getX());
     hero.update();
     popMatrix();
     
@@ -270,17 +273,19 @@ void draw(){
       waterGrass[i].drawGrass(shift+3*grassPatchSize);
       waterGrass[i].drawGrass(shift+4*grassPatchSize);
     }
-    shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
-    for(int i = 0; i < waterWeeds.length; i++){
-          waterWeeds[i].drawCattail(shift);
-          waterWeeds[i].drawCattail(shift+weedPatchSize);
-    }
-    
     pond.drawPond();
+    shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+    for(int i = 2; i < waterWeeds.length; i++){
+            waterWeeds[i].drawCattail(shift);
+            waterWeeds[i].drawCattail(shift+weedPatchSize);
+    }
     for(int i = 0; i < pads.length; i++){
       pads[i].drawLillyPad();
     }
-
+    waterWeeds[0].drawCattail(POND_FINAL - width/2);
+    waterWeeds[1].drawCattail(POND_FINAL + width/2);
+    
+    
     hero.drawHero();
     hero.update();
     if(hero.getPosition().x > POND_FINAL){
