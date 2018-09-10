@@ -31,6 +31,7 @@ Spider[] brood = new Spider[21];
 LillyPad[] pads = new LillyPad[20];
 Mower mower;
 Cat cat;
+Frog frogLeft, frogRight;
 Pond pond;
 float grassPatchSize;
 float weedPatchSize;
@@ -43,8 +44,8 @@ String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone n
 
 
 void setup(){
-  fullScreen(P2D);
-  //size(1080,720, P2D);
+  //fullScreen(P2D);
+  size(1080,720, P2D);
   frameRate(FPS);
   FENCE_START = width*9;
   POND_START = width*12;
@@ -74,6 +75,8 @@ void setup(){
   waterWeeds[1] = new Cattail(-UNIT_SPACING/2, height/4, UNIT_SPACING);
   waterWeeds[0].setForeground();
   waterWeeds[1].setForeground();
+  frogLeft = new Frog(POND_FINAL - width/2 + waterWeeds[0].getCenter(), 50, 20, 1);
+  frogRight = new Frog(POND_FINAL + width/2 + waterWeeds[1].getCenter(), 50, 20, -1);
   for(int i = 2; i < waterWeeds.length; i++){
     waterWeeds[i] = new Cattail((i-2)*UNIT_SPACING+random(UNIT_SPACING/2), random(0, 3*height/7), random(0.7*UNIT_SPACING, UNIT_SPACING));
   }
@@ -284,7 +287,9 @@ void draw(){
     }
     waterWeeds[0].drawCattail(POND_FINAL - width/2);
     waterWeeds[1].drawCattail(POND_FINAL + width/2);
-    
+    frogLeft.drawFrog();
+    frogLeft.update();
+    frogRight.drawFrog();
     
     hero.drawHero();
     hero.update();
@@ -352,6 +357,7 @@ void mousePressed(){
       }
     }
     else if(hero.getPosition().x == POND_FINAL){
+      frogLeft.launchTongue(mouseX-cam.getX(), mouseY);
     }
   }
 }

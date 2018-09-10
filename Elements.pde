@@ -53,6 +53,10 @@ class Cattail{
     stemLength = height - yPos - (random(0.5, 0.7)*grassHeight);
   }
   
+  float getCenter(){
+    return xPos + wide/2;
+  }
+  
   void drawCattail(float shift){
     noStroke();
     pushMatrix();
@@ -70,7 +74,6 @@ class Cattail{
     stemColor = color(50, 255, 100);
     topColor = color(152, 101, 50);
     stemLength = height;
-    println(xPos);
  }
  
    boolean hitCattail(float x, float y, float shift){ //shift? weedPatchSize? 
@@ -288,6 +291,82 @@ class Mower{
     phase2 = false;
     phase3 = false;
   }
+}
+
+class Frog{
+  float xPos;
+  float yPos;
+  float range;
+  int headSize;
+  float angle;
+  color skin = color(50,255,50);
+  color tongueColor = color(255, 155, 205);
+  PVector tonguePosition;
+  PVector targetPosition;
+  boolean attacking = false;
+  int tongueSpeed = 25;
+  PVector aim;
+  int direction;
+  
+  Frog(float x, float y, int big, int facing){
+    xPos = x;
+    yPos = y; 
+    headSize = big;
+    range = 5*headSize;
+    direction = facing;
+    angle = 0;
+    tonguePosition = new PVector(0,0);
+  }
+  
+  PVector getPosition(){
+    return new PVector(xPos, yPos);
+  }
+  
+  void drawFrog(){
+    pushMatrix();
+    translate(xPos, yPos);
+    scale(direction, 1);
+    //HEAD
+    pushMatrix(); 
+    rotate(angle);
+    fill(tongueColor);
+    ellipse(tonguePosition.x, 0, headSize/2, headSize/2);
+    rectMode(CORNERS);
+    rect(0, -headSize/6, tonguePosition.x, headSize/6);
+    rectMode(CORNER);
+    fill(skin);
+    arc(0,0, headSize, headSize, PI/8,  TWO_PI - PI/8, PIE);
+    popMatrix();
+    //BODY
+    ellipse(0, 1.4*headSize, 1.5*headSize, 2*headSize);
+    popMatrix();
+  }
+  
+  void update(){
+    if(attacking){
+      tonguePosition.add(aim);
+      println("Tongue: " + tonguePosition + " Target: " + targetPosition);
+      if(tonguePosition.x + xPos > targetPosition.x){
+        attacking = false;
+      }
+    }
+    else if(tonguePosition.x > 0){
+      tonguePosition.sub(aim);
+    }
+  }
+  
+  void launchTongue(float x, float y){
+    targetPosition = new PVector(x, y);
+    //fix
+    angle = cos((x-xPos)/PVector.dist(targetPosition, tonguePosition));
+    attacking = true;
+    aim = PVector.sub(targetPosition, tonguePosition);
+    println(aim);
+    aim.normalize();
+    aim.mult(tongueSpeed);
+  }
+  
+
 }
 
 class Insect{
