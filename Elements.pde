@@ -71,7 +71,7 @@ class Cattail{
  }
  
  void setForeground(){
-    stemColor = color(50, 255, 100);
+    stemColor = color(75, 200, 135);
     topColor = color(152, 101, 50);
     stemLength = height;
  }
@@ -160,9 +160,10 @@ class LillyPad{
     angle = rotation;
   }
   
-  float getHeight(){
-    return pos.y;
+  PVector getPosition(){
+    return pos;
   }
+  
   
   void drawLillyPad(){
     pushMatrix();
@@ -198,176 +199,7 @@ class Grass{
   }
 }
 
-class Mower{
-  public static final int MOWER_SPEED = 8;
-  float velocity = 8;
-  float acceleration = 0;
-  PVector pos;
-  PVector startPos;
-  float angle;
-  float size;
-  float startPoint = 0;
-  boolean phase1, phase2, phase3;
-  
-  Mower(float x, float y, float big){
-    pos = new PVector(x,y);
-    startPos = new PVector(x,y);
-    angle = 0;
-    size = big;
-    phase1 = true;
-    phase2 = false;
-    phase3 = false;
-  }
-  
-  float getVelocity(){
-    return velocity;
-  }
-  
-  float checkDistance(PVector heroPos){
-    float distance = heroPos.dist(pos);
-    return distance - (size/2);    
-  }
-  
-  void drawMower(){
-    noStroke();
-    pushMatrix();
-    translate(pos.x,pos.y);
-    fill(205,25,25);
-    rect(0,(-size*0.8)/2, -2000, size*0.8);
-    rotate(angle);
-    fill(0,0,0);
-    ellipse(0,0, size, size);
-    fill(185,185,185);
-    ellipse(0,0, size*0.85, size*0.85);
-    fill(0,0,0);
-    ellipse(0,0,size*.25, size*.25);
-    pushMatrix();
-    fill(0,0,0);
-    translate(0, 0);
-    for(int i = 0; i < 24; i++){
-      rotate(PI/12);
-      rect(-30, (size/2)-5, 60, 20);
-    }
-    popMatrix();
-    popMatrix();
-  }
-  
-  void update(){
-    angle += velocity/size;
-    pos.add(velocity,0);
-    velocity += acceleration;
-    if(-cam.getX() > FENCE_START/3 && phase1){
-      acceleration = 0.005; 
-      phase1 = false;
-      phase2 = true;
-    }
-    if(screenOverlap(-cam.getX()) > width/3 && phase2){
-      acceleration = -0.1;
-      phase2 = false;
-      phase3 = true;
-    }
-    if(screenOverlap(-cam.getX()) < -width*1.5 && phase3){
-      acceleration = 0;
-      velocity = 8;
-      mowerSound.stop();
-      phase3 = false;
-    }
-  }
-  
-  float screenOverlap(float camX){     //use arg of zero to maintain original start point
-    float overlap = pos.x - camX;
-    return  overlap;
-  }
-  
-  void reset(){
-    mowerSound.stop();
-    pos = new PVector(startPos.x, startPos.y);
-    angle = 0;
-    acceleration = 0;
-    velocity = 8;
-    startPoint = 0;
-    mowerSound.loop();
-    phase1 = true;
-    phase2 = false;
-    phase3 = false;
-  }
-}
 
-class Frog{
-  float xPos;
-  float yPos;
-  float range;
-  int headSize;
-  float angle;
-  color skin = color(50,255,50);
-  color tongueColor = color(255, 155, 205);
-  PVector tonguePosition;
-  PVector targetPosition;
-  boolean attacking = false;
-  int tongueSpeed = 25;
-  PVector aim;
-  int direction;
-  
-  Frog(float x, float y, int big, int facing){
-    xPos = x;
-    yPos = y; 
-    headSize = big;
-    range = 5*headSize;
-    direction = facing;
-    angle = 0;
-    tonguePosition = new PVector(0,0);
-  }
-  
-  PVector getPosition(){
-    return new PVector(xPos, yPos);
-  }
-  
-  void drawFrog(){
-    pushMatrix();
-    translate(xPos, yPos);
-    scale(direction, 1);
-    //HEAD
-    pushMatrix(); 
-    rotate(angle);
-    fill(tongueColor);
-    ellipse(tonguePosition.x, 0, headSize/2, headSize/2);
-    rectMode(CORNERS);
-    rect(0, -headSize/6, tonguePosition.x, headSize/6);
-    rectMode(CORNER);
-    fill(skin);
-    arc(0,0, headSize, headSize, PI/8,  TWO_PI - PI/8, PIE);
-    popMatrix();
-    //BODY
-    ellipse(0, 1.4*headSize, 1.5*headSize, 2*headSize);
-    popMatrix();
-  }
-  
-  void update(){
-    if(attacking){
-      tonguePosition.add(aim);
-      println("Tongue: " + tonguePosition + " Target: " + targetPosition);
-      if(tonguePosition.x + xPos > targetPosition.x){
-        attacking = false;
-      }
-    }
-    else if(tonguePosition.x > 0){
-      tonguePosition.sub(aim);
-    }
-  }
-  
-  void launchTongue(float x, float y){
-    targetPosition = new PVector(x, y);
-    //fix
-    angle = cos((x-xPos)/PVector.dist(targetPosition, tonguePosition));
-    attacking = true;
-    aim = PVector.sub(targetPosition, tonguePosition);
-    println(aim);
-    aim.normalize();
-    aim.mult(tongueSpeed);
-  }
-  
-
-}
 
 class Insect{
   PVector pos;
@@ -609,147 +441,158 @@ class Spider{
   }
 }
 
-class Cat{
-  final int RIGHT_PACE = 1;
-  final int LEFT_PACE = -1;
-  final int LIMIT = 25;
-  int size = 90;
-  int swipeRange = size+30;
-  color fur = color(200, 100, 0);
-  color nose = color(255, 175,175);
-  
+class Butterfly{
+  final int FLUTTER_MAX = 35;
+  final int MAX_VELOCITY = 20;
+  final float VELOCITY = width/400;
+  final float DECAY_RATE = 0.1;
+  final int LIMIT = width/4;
+  float decay = 0;
   PVector pos;
-  PVector vel;
-  int cooldown = 0;
-  PVector pacePoint;
-  boolean hunting = true;
-  boolean pacing = false;
-  int pace = 0;
-  int direction = RIGHT_PACE;
+  PVector vel; 
+  PVector pullPosition;
+  float flutter = 0;
+  int size;
+  int direction;
+  color hit = color(255, 0,0);
+  color wingColor = color(255, 140,0);
+  color bodyColor = color(152, 101, 50);
+  Web leash = new Web();
+  boolean caught = false;
+  boolean flung = false;
+  boolean dead = false;
+  boolean limited = true;
   
-  
-
-  
-  Cat(PVector heroPos, float catHeight){
-    pos = new PVector(heroPos.x - fenceWidth, catHeight - size/4);
-    vel = new PVector(2,10);
+  Butterfly(float x, float y, int big, int way){
+    pos = new PVector(x,y);
+    size = big;
+    direction = way;
+    vel = new PVector(VELOCITY,0);
   }
   
-  void drawCat(){
-    fill(fur);
-    pushMatrix();
-    translate(pos.x + pace, pos.y);
-    scale(direction, 1);
-    stroke(0,0,0);
-    triangle(- size/4, - (6*size/9), size/7, 0,-(3*size/7), 0);
-    ellipse(0, 0, size, size);
-    noStroke();
-    triangle((3*size/28), -(4*size/7), 0, -size/4, (2*size/7), -size/4);
-    stroke(0,0,0);
-    //ear lines
-    line((3*size/28), -(4*size/7), 0, -size/4);
-    line((3*size/28), -(4*size/7), (2*size/7), -size/4);
-    //whiskers 
-    line(size/2 - 8, -6, (3*size/28), -10);
-    line(size/2 - 8, - 3, (3*size/28) - 4, 0);
-    line(size/2 - 8, 0, (3*size/28), 10);
-    fill(nose);
-    triangle(size/2, 2, size/2 - 4, -6, size/2 + 2, -6);
-    popMatrix();
+  boolean getDead(){
+    return dead;
   }
   
   PVector getPosition(){
-    return pos;
+    return new PVector(pos.x + size/4, pos.y + flutter);
+  }
+  
+  float getSize(){
+    return (3*size)/4;
+  }
+  
+  void setDead(){
+    dead = true;
+  }
+  
+  void removeLimits(){
+    limited = false;
+  }
+  
+  void setCaught(boolean status){
+    caught = status;
+  }
+  
+  void setPullPosition(float mx, float my){
+    pullPosition = new PVector(mx,my);
+  }
+  
+  boolean getCaught(){
+    return caught;
+  }
+  
+  void drawButterfly(){
+    noStroke();
+    pushMatrix();
+    translate(pos.x, pos.y + flutter);
+    scale(direction, 1);
+    rotate(-PI/4);
+    fill(wingColor);
+    rect(-size/4, size/4, size/2,size/2);
+    arc(size/2, size/4, size, 1.2*size, HALF_PI + PI/8, TWO_PI + HALF_PI - PI/7, CHORD);
+    arc(-size/4, size/4, 0.7*size, size, HALF_PI + PI/9, TWO_PI + HALF_PI - PI/8, CHORD);
+    fill(bodyColor);
+    ellipse(size/4,3*size/4, 1.5*size, size/8);
+    ellipse(.9*size, 3*size/4, size/5.5, size/5.5);
+    popMatrix();
+    
+    if(caught){
+      leash.drawWeb();
+    }
   }
   
   void update(PVector heroPos){
-    if(hunting){
-      if(abs(pos.x - heroPos.x) < LIMIT){
-        pacing = true;
+    
+    // Butterfly flutters regardless of caught or not
+    if(!flung){
+      if(random(1) > 0.95){
+        direction *= -1;
       }
-      else{
-        pacing = false;
+      if(random(1) > 0.95){
+        vel.y = -vel.y;
       }
-      
-      if(pacing){
-        pace();
-      }
-      else{
+      vel.y += 2*GRAVITY;
+      flutter -= vel.y;
+      if(flutter >= FLUTTER_MAX){
+        //flap wings
+        vel.y = 10;
+      }      
+      if(caught){
         if(pos.x > heroPos.x){
-          moveLeft();
+          pos.x -= vel.x;
         }
         else if(pos.x < heroPos.x){
-          moveRight();
+          pos.x += vel.x;
+        }
+        leash.setEnd(pos.x, pos.y + flutter);
+      }
+      else{
+        pos.x = pos.x + (direction*vel.x);
+        if(limited){
+          if(pos.x > POND_FINAL + LIMIT || pos.x < POND_FINAL - LIMIT){
+            direction = -direction;
+            pos.x += (direction*vel.x);
+          }
         }
       }
     }
-    else{
-      moveLeft();
-    }
-  }
-  
-  void pace(){
-    if(direction == RIGHT_PACE){
-      pace += vel.x;
-      if(pace > LIMIT){
-        direction = LEFT_PACE;
+    else if(flung){
+      pos.x = pos.x + (direction*vel.x);
+      if(vel.x > VELOCITY){
+        vel.x -= decay;
+        decay += DECAY_RATE;
       }
-    }
-    else{
-      pace -= vel.x;
-      if(pace < -LIMIT){
-        direction = RIGHT_PACE;
+      else{
+        flung = false;
       }
     }
   }
   
-  void moveLeft(){
-    pos.x -= vel.x*2;
-    direction = LEFT_PACE;
+  void fling(PVector mouse){
+    flung = true;
+    decay = 0;
+    float dist = mouse.dist(pullPosition);
+    float newVel = map(dist, 0, width, VELOCITY, MAX_VELOCITY);
+    if(mouse.x < pullPosition.x){
+      direction = -1;
+    }
+    else if(mouse.x > pullPosition.x){
+      direction = 1;
+    }
+    vel.x = newVel;
   }
   
-  void moveRight(){
-    pos.x += vel.x*2;
-    direction = RIGHT_PACE;
-  }
-  
-  boolean insideRange(PVector heroPos, float heroSize){
-    if(pos.dist(heroPos) < swipeRange/2 + heroSize/2){
+  boolean hitButterfly(float x, float y){
+    if(dist(x,y, pos.x + size/4, pos.y + flutter) < (3*size)/4){ //hit box is slightly offset from pos.x
       return true;
     }
-    else return false;
+    return false;    
   }
   
-  void swipe(){
-    if(cooldown == 0){
-      cooldown = 60;
-      hero.takeDamage();
-      meow.play();
-    }
-    else{
-      cooldown--;
-    } 
+  void leashButterfly(PVector heroPos){
+    caught = true;
+    leash = new Web(heroPos.x, heroPos.y, pos.x, pos.y);
   }
-  
-  void stopHunting(){
-    if(hunting){
-      grumble.play();
-      hunting = false;
-    }
-    
-  }
-  
-  void resetCooldown(){
-    cooldown = 0;
-  }
-  
-  void reset(PVector heroPos, float catHeight){
-    pos = new PVector(heroPos.x - fenceWidth, catHeight - size/4);
-    vel = new PVector(2,10);
-    hunting = true;
-    pacing = false;
-    pace = 0; 
-    cooldown = 0;
-    direction = RIGHT_PACE;
-  }
+
 }

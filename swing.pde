@@ -29,9 +29,10 @@ Fence[] fence;
 Insect[] bugs = new Insect[15];
 Spider[] brood = new Spider[21];
 LillyPad[] pads = new LillyPad[20];
+Butterfly[] butterflies = new Butterfly[10];
 Mower mower;
 Cat cat;
-Frog frogLeft, frogRight;
+Frog[] frogs = new Frog[10];
 Pond pond;
 float grassPatchSize;
 float weedPatchSize;
@@ -71,12 +72,10 @@ void setup(){
   for(int i = 0; i < weeds.length; i++){
     weeds[i] = new Dandelion(i*UNIT_SPACING+random(UNIT_SPACING/2), random(0, height/2), int(random(UNIT_SPACING, 3*UNIT_SPACING)));
   }
-  waterWeeds[0] = new Cattail(3*UNIT_SPACING, height/4, UNIT_SPACING);
-  waterWeeds[1] = new Cattail(-UNIT_SPACING/2, height/4, UNIT_SPACING);
+  waterWeeds[0] = new Cattail(UNIT_SPACING/2, height/4, UNIT_SPACING);
+  waterWeeds[1] = new Cattail(-3*UNIT_SPACING/2, height/4, UNIT_SPACING);
   waterWeeds[0].setForeground();
   waterWeeds[1].setForeground();
-  frogLeft = new Frog(POND_FINAL - width/2 + waterWeeds[0].getCenter(), 50, 20, 1);
-  frogRight = new Frog(POND_FINAL + width/2 + waterWeeds[1].getCenter(), 50, 20, -1);
   for(int i = 2; i < waterWeeds.length; i++){
     waterWeeds[i] = new Cattail((i-2)*UNIT_SPACING+random(UNIT_SPACING/2), random(0, 3*height/7), random(0.7*UNIT_SPACING, UNIT_SPACING));
   }
@@ -108,6 +107,15 @@ void setup(){
   for(int i = 1; i < pads.length; i++){
       pads[i] = new LillyPad((POND_START+width+padSize)+random(0,POND_FINAL-POND_START), random(height - height/15, height), padSize, random(0,TWO_PI));
   }
+  frogs[0] = new Frog(POND_FINAL - width/2 + waterWeeds[0].getCenter(), height/3, UNIT_SPACING/2, 0, 1);
+  frogs[1] = new Frog(POND_FINAL + width/2 + waterWeeds[1].getCenter(), height/3, UNIT_SPACING/2, 0, -1);
+  for(int i = 2; i < frogs.length; i++){
+    frogs[i] = new Frog(pads[i-1].getPosition().x, pads[i-1].getPosition().y - UNIT_SPACING/2, UNIT_SPACING/2, 1, -1);
+  }
+  for(int i = 0; i < butterflies.length; i++){
+    butterflies[i] = new Butterfly(POND_FINAL, height/3, UNIT_SPACING, 1);
+  }
+  
 }
 
 void draw(){
@@ -287,14 +295,24 @@ void draw(){
     }
     waterWeeds[0].drawCattail(POND_FINAL - width/2);
     waterWeeds[1].drawCattail(POND_FINAL + width/2);
-    frogLeft.drawFrog();
-    frogLeft.update();
-    frogRight.drawFrog();
+    for(int i = 0; i < frogs.length; i++){
+      frogs[i].drawFrog();
+      frogs[i].update();
+    }
+    for(int i = 0; i < butterflies.length; i++){
+      butterflies[i].drawButterfly();
+      butterflies[i].update(hero.getPosition());
+      frogs[0].checkRange(butterflies[i]);
+      frogs[1].checkRange(butterflies[i]);
+      if(butterflies[i].getDead()){
+        hero.takeDamage();
+      }
+    }
     
     hero.drawHero();
     hero.update();
     if(hero.getPosition().x > POND_FINAL){
-      hero.setGroundLevel(pads[0].getHeight()-hero.getSize());
+      hero.setGroundLevel(pads[0].getPosition().y-hero.getSize());
       hero.setPos(POND_FINAL, hero.getPosition().y);
       hero.releaseWeb();
     }
@@ -303,7 +321,13 @@ void draw(){
     }
     popMatrix();
     
-    cam.lockOnTo(hero.getPosition().x);
+    if(hero.getPosition().x < POND_FINAL){
+      cam.lockOnTo(hero.getPosition().x);
+    }
+    else
+    {
+      cam.setPos(POND_FINAL-width/2, 0);
+    }
   }
   else if(gameState == Game.OVER){
    background(0,0,0);
@@ -357,13 +381,27 @@ void mousePressed(){
       }
     }
     else if(hero.getPosition().x == POND_FINAL){
-      frogLeft.launchTongue(mouseX-cam.getX(), mouseY);
+      for(int i = 0; i < butterflies.length; i++){
+        if(butterflies[i].hitButterfly(mouseX - cam.getX(), mouseY)){
+          butterflies[i].leashButterfly(hero.getPosition());
+          butterflies[i].setPullPosition(mouseX, mouseY);
+          break;
+        }
+      }
     }
   }
 }
 
 void mouseReleased(){
   hero.releaseWeb();
+  if(gameState == Game.STAGE_3){
+    for(int i = 0; i < butterflies.length; i++){
+      if(butterflies[i].getCaught()){
+        butterflies[i].setCaught(false);
+        butterflies[i].fling(new PVector(mouseX, mouseY));
+      }
+    }
+  }
 }
 
 
@@ -460,8 +498,8 @@ void checkInput(){
     progress = Game.STAGE_3;
     hero.speechBubbleSwitch(false);
     hero.setPos(POND_FINAL, 0);
-    cam.setPos(POND_FINAL-width, 0);
-    hero.setGroundLevel(pads[0].getHeight()-hero.getSize());
+    cam.setPos(POND_FINAL-width/2, 0);
+    hero.setGroundLevel(pads[0].getPosition().y-hero.getSize());
     hero.setHealth(1);
     keys['4'] = false;
   }
