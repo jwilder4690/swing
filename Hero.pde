@@ -80,6 +80,7 @@ void drawHero(){
   oldWeb.drawWeb();
   oldWeb.update();
   fill(0,0,0);
+  noStroke();
   ellipse(pos.x, pos.y, wide, wide);
   speechBubble.display();
   speechBubble.update(pos);

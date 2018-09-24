@@ -101,51 +101,75 @@ class Frog{
   color skin = color(50, 255, 100);
   color tongueColor = color(255, 155, 205);
   PVector tonguePosition;
-  PVector targetPosition;
+  int tongueSize;
+  //PVector targetPosition;
   boolean attacking = false;
   boolean retracting = false;
   int tongueSpeed = 25;
   PVector aim;
-  int direction;
   int type;
-  Butterfly prey;
+  PVector prey;
+  float preySize; 
   
-  Frog(float x, float y, int big,int style, int facing){
+  Frog(float x, float y, int big,int style){
     pos = new PVector(x,y); 
     headSize = big;
+    tongueSize = headSize/2;
     range = 5*headSize;
-    direction = facing;
     angle = 0;
     tonguePosition = new PVector(0,0);
     aim = new PVector(0,0);
+    prey = new PVector(0,0);
     type = style;
+    range = (type == 0) ? 5*headSize : 10*headSize;
   }
   
   PVector getPosition(){
     return pos;
   }
   
+  PVector getTonguePosition(){
+    return tonguePosition;
+  }
+  
   void drawFrog(){
     pushMatrix();
     translate(pos.x, pos.y);
-    scale(direction, 1);
     //HEAD
     pushMatrix(); 
-    rotate(angle);
     fill(tongueColor);
-    ellipse(tonguePosition.x, 0, headSize/2, headSize/2);
-    rectMode(CORNERS);
-    rect(0, -headSize/6, tonguePosition.x, headSize/6);
-    rectMode(CORNER);
-    fill(skin);
-    arc(0,0, headSize, headSize, PI/8,  TWO_PI - PI/8, PIE);
+    ellipse(tonguePosition.x, tonguePosition.y, tongueSize, tongueSize);
+    stroke(tongueColor);
+    strokeWeight(7);
+    line(0,0, tonguePosition.x, tonguePosition.y);
+    noStroke();
+    strokeWeight(2);
+     fill(skin);
+    if(type == 0){
+      rotate(angle);
+      arc(0,0, headSize, headSize, PI/8,  TWO_PI - PI/8, PIE);
+    }
+    else if(type == 1){
+      ellipse(0,0, headSize, headSize);
+    }
     popMatrix();
+    
     //BODY
     if(type == 0){
       ellipse(0, 1.4*headSize, 1.5*headSize, 2*headSize);
     }
     else if(type == 1){
-      
+      ellipse(0, headSize, 1.3*headSize, 1.4*headSize);
+      pushMatrix();
+      translate(0.8*headSize, headSize);
+      rotate(PI/6);
+      ellipse(0,0, headSize/2, 1.4*headSize);
+      popMatrix();
+      pushMatrix();
+      translate(-0.8*headSize, headSize);
+      rotate(-PI/6);
+      ellipse(0,0, headSize/2, 1.4*headSize);
+      popMatrix();
     }
     popMatrix();
   }
@@ -154,38 +178,58 @@ class Frog{
     if(attacking && !retracting){
       tonguePosition.add(aim);
       if(tonguePosition.mag() > range){
-        retracting = true;
-        if(prey.getPosition().dist(pos) - prey.getSize() <= range){
-          prey.setDead();
-        } 
+        retracting = true; 
       }
     }
     else if(retracting){
       tonguePosition.sub(aim);
-      if(tonguePosition.x < 0){
+      if(tonguePosition.x <= 0){
         tonguePosition.x = 0;
+        tonguePosition.y = 0;
         attacking = false;
         retracting = false;
-        //hero.takeDamage();
+      }
+    }
+    if(attacking){
+      if(tongueHit(hero.getPosition())){
+        hero.takeDamage(); //causes game over
       }
     }
   }
   
-  void checkRange(Butterfly target){
+  
+  void checkRange(PVector target, float size){
     if(!attacking){
-      if(target.getPosition().dist(pos) - target.getSize() <= 2*range){
+      if(target.dist(pos) - size <= 2*range){
         prey = target;
-        launchTongue(target.getPosition());
+        preySize = size;
+        launchTongue(target);
       }
     }
   }
   
   void launchTongue(PVector target){
-    angle = angleBetweenVectors(pos,target);
     attacking = true;
-    aim = PVector.sub(target, tonguePosition);
+    aim = PVector.sub(target,pos);
+    angle = PVector.angleBetween(aim, new PVector(1,0));
+    if(pos.y - target.y > 0){
+      angle = -angle;
+    }
     aim.normalize();
     aim.mult(tongueSpeed);
+  }
+  
+  boolean tongueHit(PVector target){
+    
+    if(target.dist(PVector.add(tonguePosition, pos)) <= preySize/2 + tongueSize/2){
+      println("target: " + target);
+      println("tongue: " + tonguePosition);
+      noLoop();
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 }
 

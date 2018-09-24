@@ -446,7 +446,7 @@ class Butterfly{
   final int MAX_VELOCITY = 20;
   final float VELOCITY = width/400;
   final float DECAY_RATE = 0.1;
-  final int LIMIT = width/4;
+  final int LIMIT = width/5;
   float decay = 0;
   PVector pos;
   PVector vel; 

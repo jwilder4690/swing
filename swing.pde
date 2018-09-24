@@ -42,7 +42,7 @@ float fenceSpacing;
 float padSize;
 float shift;
 String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
-
+String[] stageThreeText = {"These two frogs have frightened this group of butterflies! I can protect them by pulling them away from the frogs with my web. Click and hold to pull them, drag and release to fling them."};
 
 void setup(){
   //fullScreen(P2D);
@@ -50,13 +50,14 @@ void setup(){
   frameRate(FPS);
   FENCE_START = width*9;
   POND_START = width*12;
-  POND_FINAL = width*16;
+  POND_FINAL = width*20;
   grassPatchSize = width/4.0;
   weedPatchSize = width;
   grassHeight = height/9; 
   fenceWidth = height/8;
-  padSize = height/10;
+  padSize = height/8;
   fenceSpacing = width/5;
+  dialog = new Bubble(0, height/6, width, height/6, false);
   createAudio();
   generateStartScreen();
   hero = new Hero(width/2, 0, UNIT_SPACING);
@@ -107,10 +108,10 @@ void setup(){
   for(int i = 1; i < pads.length; i++){
       pads[i] = new LillyPad((POND_START+width+padSize)+random(0,POND_FINAL-POND_START), random(height - height/15, height), padSize, random(0,TWO_PI));
   }
-  frogs[0] = new Frog(POND_FINAL - width/2 + waterWeeds[0].getCenter(), height/3, UNIT_SPACING/2, 0, 1);
-  frogs[1] = new Frog(POND_FINAL + width/2 + waterWeeds[1].getCenter(), height/3, UNIT_SPACING/2, 0, -1);
+  frogs[0] = new Frog(POND_FINAL - width/2 + waterWeeds[0].getCenter(), height/3, UNIT_SPACING/2, 0);
+  frogs[1] = new Frog(POND_FINAL + width/2 + waterWeeds[1].getCenter(), height/3, UNIT_SPACING/2, 0);
   for(int i = 2; i < frogs.length; i++){
-    frogs[i] = new Frog(pads[i-1].getPosition().x, pads[i-1].getPosition().y - UNIT_SPACING/2, UNIT_SPACING/2, 1, -1);
+      frogs[i] = new Frog(pads[i-1].getPosition().x, pads[i-1].getPosition().y - UNIT_SPACING/2, 2*UNIT_SPACING/5, 1);
   }
   for(int i = 0; i < butterflies.length; i++){
     butterflies[i] = new Butterfly(POND_FINAL, height/3, UNIT_SPACING, 1);
@@ -216,8 +217,7 @@ void draw(){
       }
     }
     
-    if(count >= 1){
-    //if(count == brood.length){
+    if(count == brood.length){
       dialog.setText(stageTwoText[2]);
       if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
         dialog.setVisibility(false);
@@ -298,15 +298,15 @@ void draw(){
     for(int i = 0; i < frogs.length; i++){
       frogs[i].drawFrog();
       frogs[i].update();
+      if(i >= 2 && hero.getPosition().x < POND_FINAL){
+        frogs[i].checkRange(hero.getPosition(), hero.getSize());
+      }
     }
     for(int i = 0; i < butterflies.length; i++){
       butterflies[i].drawButterfly();
       butterflies[i].update(hero.getPosition());
-      frogs[0].checkRange(butterflies[i]);
-      frogs[1].checkRange(butterflies[i]);
-      if(butterflies[i].getDead()){
-        hero.takeDamage();
-      }
+      frogs[0].checkRange(butterflies[i].getPosition(), butterflies[i].getSize());
+      frogs[1].checkRange(butterflies[i].getPosition(), butterflies[i].getSize());
     }
     
     hero.drawHero();
@@ -315,18 +315,35 @@ void draw(){
       hero.setGroundLevel(pads[0].getPosition().y-hero.getSize());
       hero.setPos(POND_FINAL, hero.getPosition().y);
       hero.releaseWeb();
+      dialog.setText(stageThreeText[0]);
+      dialog.setSize(24); 
+      dialog.setVisibility(true); 
+      clock.startTime();
+      waiting = true;
     }
     else if(hero.getPosition().x < POND_FINAL && hero.getPosition().y > pond.waterLevel()){
       hero.takeDamage();
     }
     popMatrix();
     
-    if(hero.getPosition().x < POND_FINAL){
+    if(hero.getPosition().x < POND_FINAL - width/2){
       cam.lockOnTo(hero.getPosition().x);
     }
+    //else if(hero.getPosition().x > POND_FINAL - width/2){
+    //  cam.lockOnTo(POND_FINAL); //testing
+    //}
     else
     {
       cam.setPos(POND_FINAL-width/2, 0);
+    }
+    
+    ///////////////////////Dialog handling////////////////////////////////
+    if(clock.getElapsedTime() > 6000 && waiting){
+      waiting = false;
+      
+    }
+    if(waiting){
+      dialog.display();
     }
   }
   else if(gameState == Game.OVER){
@@ -383,6 +400,7 @@ void mousePressed(){
     else if(hero.getPosition().x == POND_FINAL){
       for(int i = 0; i < butterflies.length; i++){
         if(butterflies[i].hitButterfly(mouseX - cam.getX(), mouseY)){
+          waiting = false;
           butterflies[i].leashButterfly(hero.getPosition());
           butterflies[i].setPullPosition(mouseX, mouseY);
           break;
@@ -501,6 +519,11 @@ void checkInput(){
     cam.setPos(POND_FINAL-width/2, 0);
     hero.setGroundLevel(pads[0].getPosition().y-hero.getSize());
     hero.setHealth(1);
+    clock.startTime();
+    dialog = new Bubble(0, height/6, width, height/6, false);
+    dialog.setText(stageThreeText[0]);
+    dialog.setSize(24);
+    dialog.setVisibility(true); 
     keys['4'] = false;
   }
 }
