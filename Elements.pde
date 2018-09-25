@@ -452,6 +452,9 @@ class Butterfly{
   PVector vel; 
   PVector pullPosition;
   float flutter = 0;
+  float flap;
+  float flapRate = 0.25;
+  int flapDirection = -1;
   int size;
   int direction;
   color hit = color(255, 0,0);
@@ -468,6 +471,7 @@ class Butterfly{
     size = big;
     direction = way;
     vel = new PVector(VELOCITY,0);
+    flap = random(1);
   }
   
   boolean getDead(){
@@ -508,10 +512,14 @@ class Butterfly{
     translate(pos.x, pos.y + flutter);
     scale(direction, 1);
     rotate(-PI/4);
+    pushMatrix();
+    translate(size/4,3*size/4);
+    scale(1,flap);
     fill(wingColor);
-    rect(-size/4, size/4, size/2,size/2);
-    arc(size/2, size/4, size, 1.2*size, HALF_PI + PI/8, TWO_PI + HALF_PI - PI/7, CHORD);
-    arc(-size/4, size/4, 0.7*size, size, HALF_PI + PI/9, TWO_PI + HALF_PI - PI/8, CHORD);
+    rect(-size/2,0, size,-size/2);
+    arc(size/3, -size/2, size, 1.2*size, HALF_PI + PI/8, TWO_PI + HALF_PI - PI/7, CHORD);
+    arc(-size/3, -size/2, 0.7*size, size, HALF_PI + PI/9, TWO_PI + HALF_PI - PI/8, CHORD);
+    popMatrix();
     fill(bodyColor);
     ellipse(size/4,3*size/4, 1.5*size, size/8);
     ellipse(.9*size, 3*size/4, size/5.5, size/5.5);
@@ -523,6 +531,12 @@ class Butterfly{
   }
   
   void update(PVector heroPos){
+    
+    //flap update constantly
+    flap += flapDirection*flapRate;
+    if(flap <= 0 || flap >= 1){
+      flapDirection *= -1;
+    }
     
     // Butterfly flutters regardless of caught or not
     if(!flung){
