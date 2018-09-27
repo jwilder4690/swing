@@ -94,6 +94,8 @@ class Mower{
 }
 
 class Frog{
+  final int SITTING = 1;
+  final int CLIMBING = 0;
   PVector pos;
   float range;
   int headSize;
@@ -105,7 +107,7 @@ class Frog{
   //PVector targetPosition;
   boolean attacking = false;
   boolean retracting = false;
-  int tongueSpeed = 25;
+  int tongueSpeed = 20;
   PVector aim;
   int type;
   PVector prey;
@@ -121,7 +123,7 @@ class Frog{
     aim = new PVector(0,0);
     prey = new PVector(0,0);
     type = style;
-    range = (type == 0) ? 5*headSize : 10*headSize;
+    range = (type == CLIMBING) ? 5*headSize : 10*headSize;
   }
   
   PVector getPosition(){
@@ -145,20 +147,20 @@ class Frog{
     noStroke();
     strokeWeight(2);
      fill(skin);
-    if(type == 0){
+    if(type == CLIMBING){
       rotate(angle);
       arc(0,0, headSize, headSize, PI/8,  TWO_PI - PI/8, PIE);
     }
-    else if(type == 1){
+    else if(type == SITTING){
       ellipse(0,0, headSize, headSize);
     }
     popMatrix();
     
     //BODY
-    if(type == 0){
+    if(type == CLIMBING){
       ellipse(0, 1.4*headSize, 1.5*headSize, 2*headSize);
     }
-    else if(type == 1){
+    else if(type == SITTING){
       ellipse(0, headSize, 1.3*headSize, 1.4*headSize);
       pushMatrix();
       translate(0.8*headSize, headSize);

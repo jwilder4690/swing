@@ -459,6 +459,7 @@ class Butterfly{
   int direction;
   color hit = color(255, 0,0);
   color wingColor = color(255, 140,0);
+  color wingColor2 = color(255,215,0);
   color bodyColor = color(152, 101, 50);
   Web leash = new Web();
   boolean caught = false;
@@ -479,11 +480,15 @@ class Butterfly{
   }
   
   PVector getPosition(){
-    return new PVector(pos.x + size/4, pos.y + flutter);
+    return new PVector(pos.x, pos.y + flutter + size/2);
   }
   
   float getSize(){
     return (3*size)/4;
+  }
+  
+  boolean getCaught(){
+    return caught;
   }
   
   void setDead(){
@@ -494,6 +499,10 @@ class Butterfly{
     limited = false;
   }
   
+  void setLimited(boolean flag){
+    limited = flag;
+  }
+  
   void setCaught(boolean status){
     caught = status;
   }
@@ -502,27 +511,37 @@ class Butterfly{
     pullPosition = new PVector(mx,my);
   }
   
-  boolean getCaught(){
-    return caught;
-  }
-  
   void drawButterfly(){
     noStroke();
     pushMatrix();
     translate(pos.x, pos.y + flutter);
     scale(direction, 1);
     rotate(-PI/4);
+        
+    ////far wings
+    pushMatrix();
+    translate(size/4,3*size/4);
+    scale(1,flap+flapRate);
+    fill(wingColor2);
+    rect(-1.2*size,0, size,-size/2);
+    arc(-0.3*size, -size/2, size, 1.2*size, HALF_PI + PI/8, TWO_PI + HALF_PI - PI/7, CHORD);
+    arc(-size, -size/2, 0.7*size, size, HALF_PI + PI/9, TWO_PI + HALF_PI - PI/8, CHORD);
+    popMatrix();
+    
+    ////close wings
     pushMatrix();
     translate(size/4,3*size/4);
     scale(1,flap);
     fill(wingColor);
-    rect(-size/2,0, size,-size/2);
-    arc(size/3, -size/2, size, 1.2*size, HALF_PI + PI/8, TWO_PI + HALF_PI - PI/7, CHORD);
-    arc(-size/3, -size/2, 0.7*size, size, HALF_PI + PI/9, TWO_PI + HALF_PI - PI/8, CHORD);
+    rect(-1.2*size,0, size,-size/2);
+    arc(-0.3*size, -size/2, size, 1.2*size, HALF_PI + PI/8, TWO_PI + HALF_PI - PI/7, CHORD);
+    arc(-size, -size/2, 0.7*size, size, HALF_PI + PI/9, TWO_PI + HALF_PI - PI/8, CHORD);
     popMatrix();
+    
+    ///body
     fill(bodyColor);
-    ellipse(size/4,3*size/4, 1.5*size, size/8);
-    ellipse(.9*size, 3*size/4, size/5.5, size/5.5);
+    ellipse(-size/2,3*size/4, 1.5*size, size/8);
+    ellipse(size*.3, 3*size/4, size/5.5, size/5.5);
     popMatrix();
     
     if(caught){
@@ -538,7 +557,6 @@ class Butterfly{
       flapDirection *= -1;
     }
     
-    // Butterfly flutters regardless of caught or not
     if(!flung){
       if(random(1) > 0.95){
         direction *= -1;
@@ -552,19 +570,18 @@ class Butterfly{
         //flap wings
         vel.y = 10;
       }      
-      if(caught){
+      if(caught && !limited){
         if(pos.x > heroPos.x){
           pos.x -= vel.x;
         }
         else if(pos.x < heroPos.x){
           pos.x += vel.x;
-        }
-        leash.setEnd(pos.x, pos.y + flutter);
+        }    
       }
       else{
         pos.x = pos.x + (direction*vel.x);
         if(limited){
-          if(pos.x > POND_FINAL + LIMIT || pos.x < POND_FINAL - LIMIT){
+          if(!insideLimits()){
             direction = -direction;
             pos.x += (direction*vel.x);
           }
@@ -580,6 +597,10 @@ class Butterfly{
       else{
         flung = false;
       }
+    }
+    
+    if(caught){
+      leash.setEnd(pos.x, pos.y + flutter + size);
     }
   }
   
@@ -597,8 +618,17 @@ class Butterfly{
     vel.x = newVel;
   }
   
+  boolean insideLimits(){
+    if(pos.x < POND_FINAL + LIMIT && pos.x > POND_FINAL - LIMIT){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  
   boolean hitButterfly(float x, float y){
-    if(dist(x,y, pos.x + size/4, pos.y + flutter) < (3*size)/4){ //hit box is slightly offset from pos.x
+    if(dist(x,y, pos.x, pos.y + flutter + size/2) < .75*size){ //hit box is slightly offset from pos.x
       return true;
     }
     return false;    
@@ -606,7 +636,7 @@ class Butterfly{
   
   void leashButterfly(PVector heroPos){
     caught = true;
-    leash = new Web(heroPos.x, heroPos.y, pos.x, pos.y);
+    leash = new Web(heroPos.x, heroPos.y, pos.x, pos.y + flutter + size);
   }
 
 }

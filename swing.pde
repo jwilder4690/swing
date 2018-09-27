@@ -20,6 +20,7 @@ Bubble dialog;
 Game gameState = Game.START;
 Game progress = Game.START;
 boolean waiting = true;
+boolean roundUp = false;
 boolean[] keys = new boolean[255];
 Dandelion[] weeds;
 Cattail[] waterWeeds;
@@ -42,7 +43,7 @@ float fenceSpacing;
 float padSize;
 float shift;
 String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you gather them up and bring them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
-String[] stageThreeText = {"These two frogs have frightened this group of butterflies! I can protect them by pulling them away from the frogs with my web. Click and hold to pull them, drag and release to fling them."};
+String[] stageThreeText = {"These two frogs have frightened this group of butterflies! I can protect them by pulling them away from the frogs with my web. Click and hold to pull them, drag and release to fling them.","Ok, now I've got enough web to round them up! Get a leash on each of them."};
 
 void setup(){
   //fullScreen(P2D);
@@ -329,22 +330,25 @@ void draw(){
     if(hero.getPosition().x < POND_FINAL - width/2){
       cam.lockOnTo(hero.getPosition().x);
     }
-    //else if(hero.getPosition().x > POND_FINAL - width/2){
-    //  cam.lockOnTo(POND_FINAL); //testing
-    //}
-    else
-    {
+    else{
       cam.setPos(POND_FINAL-width/2, 0);
     }
     
     ///////////////////////Dialog handling////////////////////////////////
     if(clock.getElapsedTime() > 6000 && waiting){
       waiting = false;
-      
+      dialog.setVisibility(false); 
+      for(int i = 0; i < butterflies.length; i++){
+        butterflies[i].removeLimits();
+      }
+      clock.startTime();
     }
-    if(waiting){
-      dialog.display();
+    if(!roundUp && clock.getElapsedTime() > 30000 && !waiting){
+      roundUp = true;
+      dialog.setText(stageThreeText[1]);
+      dialog.setVisibility(true); 
     }
+    dialog.display();
   }
   else if(gameState == Game.OVER){
    background(0,0,0);
@@ -398,11 +402,20 @@ void mousePressed(){
       }
     }
     else if(hero.getPosition().x == POND_FINAL){
+      if(waiting){ 
+        for(int i = 0; i < butterflies.length; i++){
+          butterflies[i].removeLimits();
+        }
+        waiting = false;
+        dialog.setVisibility(false); 
+      }
       for(int i = 0; i < butterflies.length; i++){
-        if(butterflies[i].hitButterfly(mouseX - cam.getX(), mouseY)){
-          waiting = false;
+        if(butterflies[i].hitButterfly(mouseX - cam.getX(), mouseY) && !butterflies[i].getCaught()){
           butterflies[i].leashButterfly(hero.getPosition());
           butterflies[i].setPullPosition(mouseX, mouseY);
+          if(roundUp && butterflies[i].insideLimits()){
+            butterflies[i].setLimited(true);
+          }
           break;
         }
       }
@@ -412,9 +425,17 @@ void mousePressed(){
 
 void mouseReleased(){
   hero.releaseWeb();
-  if(gameState == Game.STAGE_3){
+  if(gameState == Game.STAGE_3 && !roundUp){
     for(int i = 0; i < butterflies.length; i++){
       if(butterflies[i].getCaught()){
+        butterflies[i].setCaught(false);
+        butterflies[i].fling(new PVector(mouseX, mouseY));
+      }
+    }
+  }
+  else if(gameState == Game.STAGE_3 && roundUp){
+    for(int i = 0; i < butterflies.length; i++){
+      if(!butterflies[i].insideLimits() && butterflies[i].getCaught()){
         butterflies[i].setCaught(false);
         butterflies[i].fling(new PVector(mouseX, mouseY));
       }
@@ -562,8 +583,6 @@ Game checkGameState(){
       dialog.setText(stageTwoText[0]);
       dialog.setSize(24);
       clock.startTime();
-      //cam.setPos(FENCE_START + 1.5*fenceWidth, 0);
-      //hero.setPos(FENCE_START + 1.5*fenceWidth, 0);
       cat = new Cat(new PVector(FENCE_START - 1.5*fenceWidth,0), height/2);
     }
     progress = Game.STAGE_2;
