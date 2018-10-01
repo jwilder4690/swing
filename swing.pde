@@ -5,7 +5,7 @@ float amplitude = 1;
 final int UNIT_SPACING = 50;
 final float GRAVITY = -9.8/(UNIT_SPACING/2);
 final int FPS = 24;
-enum Game {START, STAGE_1, STAGE_2, STAGE_3, OVER}
+enum Game {START, STAGE_1, STAGE_2, STAGE_3, FINAL, OVER}
 final int ERROR = -45;
 int FENCE_START;
 int POND_START;
@@ -51,7 +51,8 @@ void setup(){
   frameRate(FPS);
   FENCE_START = width*9;
   POND_START = width*12;
-  POND_FINAL = width*20;
+  //POND_FINAL = width*20;
+  POND_FINAL = width*14;
   grassPatchSize = width/4.0;
   weedPatchSize = width;
   grassHeight = height/9; 
@@ -127,7 +128,7 @@ void draw(){
     title.display();
   }
   
-  ///////////////////////////         STAGE 1        ////////////////////////
+  ////////////////////////////////////////         STAGE 1        /////////////////////////////////////////
   else if(gameState == Game.STAGE_1){
     pushMatrix();
     translate(cam.getX(),cam.getY());
@@ -175,7 +176,7 @@ void draw(){
     cam.moveRight();
   }
   
-  ////////////////////////      STAGE 2       ////////////////////////////////
+  ////////////////////////////////////////////      STAGE 2       ////////////////////////////////////////////
   else if(gameState == Game.STAGE_2){
     pushMatrix();
     translate(cam.getX(),cam.getY());
@@ -273,7 +274,8 @@ void draw(){
     }
     dialog.display();
   }
-  else if(gameState == Game.STAGE_3){
+    ////////////////////////////////////////////      STAGE 3       ////////////////////////////////////////////
+  else if(gameState == Game.STAGE_3){ 
 
     pushMatrix();
     translate(cam.getX(),cam.getY());
@@ -303,9 +305,17 @@ void draw(){
         frogs[i].checkRange(hero.getPosition(), hero.getSize());
       }
     }
+    int count = 0;
     for(int i = 0; i < butterflies.length; i++){
       butterflies[i].drawButterfly();
       butterflies[i].update(hero.getPosition());
+      if(butterflies[i].getCaught()){
+        count++;
+        if(count == butterflies.length){
+          gameState = Game.FINAL;
+          hero.toggleFinalText();
+        }
+      }
       frogs[0].checkRange(butterflies[i].getPosition(), butterflies[i].getSize());
       frogs[1].checkRange(butterflies[i].getPosition(), butterflies[i].getSize());
     }
@@ -327,7 +337,7 @@ void draw(){
     }
     popMatrix();
     
-    if(hero.getPosition().x < POND_FINAL - width/2){
+    if(-cam.getX() < POND_FINAL-width/2){
       cam.lockOnTo(hero.getPosition().x);
     }
     else{
@@ -335,21 +345,61 @@ void draw(){
     }
     
     ///////////////////////Dialog handling////////////////////////////////
-    if(clock.getElapsedTime() > 6000 && waiting){
-      waiting = false;
-      dialog.setVisibility(false); 
-      for(int i = 0; i < butterflies.length; i++){
-        butterflies[i].removeLimits();
+    if(hero.getPosition().x == POND_FINAL){
+      if(clock.getElapsedTime() > 6000 && waiting){
+        waiting = false;
+        dialog.setVisibility(false); 
+        for(int i = 0; i < butterflies.length; i++){
+          butterflies[i].removeLimits();
+        }
+        clock.startTime();
       }
-      clock.startTime();
+      if(!roundUp && clock.getElapsedTime() > 30000 && !waiting){
+        roundUp = true;
+        dialog.setText(stageThreeText[1]);
+        dialog.setVisibility(true); 
+      }
+      dialog.display();
     }
-    if(!roundUp && clock.getElapsedTime() > 30000 && !waiting){
-      roundUp = true;
-      dialog.setText(stageThreeText[1]);
-      dialog.setVisibility(true); 
-    }
-    dialog.display();
   }
+  /////////////////////////////////////// Stage Final ////////////////////////////////////////////
+  else if(gameState == Game.FINAL){
+    pushMatrix();
+    translate(cam.getX(),cam.getY());
+    shift = floor(-cam.getX()/grassPatchSize)*grassPatchSize;  
+    for(int i = 0; i < lawn.length; i++){
+      waterGrass[i].drawGrass(shift);
+      waterGrass[i].drawGrass(shift+grassPatchSize);
+      waterGrass[i].drawGrass(shift+2*grassPatchSize);
+      waterGrass[i].drawGrass(shift+3*grassPatchSize);
+      waterGrass[i].drawGrass(shift+4*grassPatchSize);
+    }
+    pond.drawPond();
+    shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+    for(int i = 2; i < waterWeeds.length; i++){
+            waterWeeds[i].drawCattail(shift);
+            waterWeeds[i].drawCattail(shift+weedPatchSize);
+    }
+    for(int i = 0; i < pads.length; i++){
+      pads[i].drawLillyPad();
+    }
+    waterWeeds[0].drawCattail(POND_FINAL - width/2);
+    waterWeeds[1].drawCattail(POND_FINAL + width/2);
+    for(int i = 0; i < frogs.length; i++){
+      frogs[i].drawFrog();
+      frogs[i].update();
+    }
+    for(int i = 0; i < butterflies.length; i++){
+      butterflies[i].drawButterfly();
+      butterflies[i].update(hero.getPosition());
+    }
+    
+    hero.drawHero();
+    hero.update();
+    popMatrix();
+    
+  }
+  ///////////////////////////////////////// Game Over //////////////////////////////////////////////
   else if(gameState == Game.OVER){
    background(0,0,0);
    fill(255,0,0);
@@ -495,12 +545,19 @@ void checkInput(){
     case STAGE_3:{
       gameState = Game.STAGE_3;
       progress = Game.STAGE_3;
+      hero.reset();
       hero.speechBubbleSwitch(false);
-      hero.setPos(POND_START, 0);
+      hero.setPos(POND_START+width/4, 0);
       cam.setPos(POND_START, 0);
-      keys['3'] = false;
       hero.setHealth(1);
       hero.setGroundLevel(height - grassHeight);
+      dialog = new Bubble(0, height/6, width, height/6, false);
+      dialog.setText(stageThreeText[0]);
+      dialog.setSize(24);
+      dialog.setVisibility(false); 
+      for(int i = 0; i < butterflies.length; i++){
+        butterflies[i].reset();
+      }
       break;
     }
     default:  break;
@@ -527,7 +584,7 @@ void checkInput(){
     gameState = Game.STAGE_3;
     progress = Game.STAGE_3;
     hero.speechBubbleSwitch(false);
-    hero.setPos(POND_START, 0);
+    hero.setPos(POND_START+width/4, 0);
     cam.setPos(POND_START, 0);
     hero.setHealth(1);
     keys['3'] = false;
@@ -572,6 +629,10 @@ Game checkGameState(){
   }
   
   ////////////////////Stage Check//////////////////////////////////
+  if(gameState == Game.FINAL){
+    progress = Game.START;
+    return Game.FINAL;
+  }
   if(-cam.getX() >= POND_START){
     progress = Game.STAGE_3;
     return Game.STAGE_3;

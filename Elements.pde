@@ -639,4 +639,12 @@ class Butterfly{
     leash = new Web(heroPos.x, heroPos.y, pos.x, pos.y + flutter + size);
   }
 
+  void reset(){
+    pos.set(POND_FINAL, height/3);
+    caught = false;
+    flung = false;
+    dead = false;
+    limited = true;
+  }
+
 }

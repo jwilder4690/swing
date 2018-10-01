@@ -20,6 +20,7 @@ class Hero{
   //Dialog/////
   Bubble speechBubble;
   String[] quotes = {"Run!", "Get out of the way!", "Flee for your lives, the Grass Eater has awakened!"};
+  String outro = "We did it, the Yard is safe again!";
   int duration = 124;
   int interval = 15000;
   final int INTERVAL_STEP  = 15000;
@@ -169,6 +170,12 @@ void reset(){
   webHeld = false;
   pos = new PVector(startPos.x, startPos.y);
   vel = new PVector(0,0);
+}
+
+void toggleFinalText(){
+    speechBubble.setVisibility(true);
+    speechBubble.setText(outro);
+    speechBubble.adjustToText();
 }
 
 void speechBubbleSwitch(boolean turn){

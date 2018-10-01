@@ -192,11 +192,11 @@ class Frog{
         retracting = false;
       }
     }
-    if(attacking){
-      if(tongueHit(hero.getPosition())){
-        hero.takeDamage(); //causes game over
-      }
-    }
+    //if(attacking){
+    //  if(tongueHit(hero.getPosition())){
+    //    hero.takeDamage(); //causes game over
+    //  }
+    //}
   }
   
   
@@ -206,6 +206,11 @@ class Frog{
         prey = target;
         preySize = size;
         launchTongue(target);
+      }
+    }
+    else if(attacking){
+      if(tongueHit(target)){
+        hero.takeDamage(); //causes game over
       }
     }
   }
@@ -222,11 +227,7 @@ class Frog{
   }
   
   boolean tongueHit(PVector target){
-    
     if(target.dist(PVector.add(tonguePosition, pos)) <= preySize/2 + tongueSize/2){
-      println("target: " + target);
-      println("tongue: " + tonguePosition);
-      noLoop();
       return true;
     }
     else{

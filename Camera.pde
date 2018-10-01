@@ -43,15 +43,11 @@ class Camera{
   }
     
   void lockOnTo(float heroX){
-    
-    adjust = map(heroX - pos.x, 3*width/7, width - width/5, -acceleration, acceleration);
+    heroX -= pos.x; //gets screen position
+    adjust = map(heroX, 3*width/7, width - width/5, -1.5*acceleration, acceleration);
     accelerate(adjust);
     this.moveRight();
 
-    //if(heroX - pos.x > width/2){
-    //  this.moveRight();
-    //}
-    
     if(pos.y < 0){
       this.moveDown();
     }
