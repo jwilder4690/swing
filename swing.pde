@@ -3,6 +3,7 @@ SoundFile mowerSound, grunt, meow, grumble, yowl, wee, woo, yay, ok;
 float amplitude = 1;
 
 final int UNIT_SPACING = 50;
+final int TEXT_SIZE = 64;
 final float GRAVITY = -9.8/(UNIT_SPACING/2);
 final int FPS = 24;
 enum Game {START, STAGE_1, STAGE_2, STAGE_3, FINAL, OVER}
@@ -27,6 +28,8 @@ Cattail[] waterWeeds;
 Grass[] lawn;
 Grass[] waterGrass;
 Fence[] fence;
+Cloud[] sky = new Cloud[20];
+Cloud[] skyCredits = new Cloud[3];
 Insect[] bugs = new Insect[15];
 Spider[] brood = new Spider[21];
 LillyPad[] pads = new LillyPad[20];
@@ -35,6 +38,7 @@ Mower mower;
 Cat cat;
 Frog[] frogs = new Frog[10];
 Pond pond;
+Rock rock;
 float grassPatchSize;
 float weedPatchSize;
 float grassHeight;
@@ -51,8 +55,8 @@ void setup(){
   frameRate(FPS);
   FENCE_START = width*9;
   POND_START = width*12;
-  //POND_FINAL = width*20;
-  POND_FINAL = width*14;
+  POND_FINAL = width*20;
+  //POND_FINAL = width*14;
   grassPatchSize = width/4.0;
   weedPatchSize = width;
   grassHeight = height/9; 
@@ -67,6 +71,7 @@ void setup(){
   cam = new Camera();
   mower = new Mower((-height/2)*0.8, height/2, height);
   pond = new Pond(grassHeight);
+  rock = new Rock(POND_START, height, height/3);
   fence = new Fence[int(5*((POND_START-FENCE_START)/width))+1]; 
   lawn = new Grass[int(grassPatchSize/Grass.GRASS_WIDTH)];
   waterGrass = new Grass[int(grassPatchSize/Grass.GRASS_WIDTH)];
@@ -118,7 +123,10 @@ void setup(){
   for(int i = 0; i < butterflies.length; i++){
     butterflies[i] = new Butterfly(POND_FINAL, height/3, UNIT_SPACING, 1);
   }
-  
+  for(int i = 0; i < sky.length; i++){
+    sky[i] = new Cloud(random(POND_FINAL - width/2, POND_FINAL + width/2), -height/4-(i*random(height/5,height/3)), random(height/4,height/3));
+  }
+  initializeCloudText();
 }
 
 void draw(){
@@ -171,8 +179,7 @@ void draw(){
     hero.update();
     mower.drawMower();
     mower.update();
-    popMatrix();
-    
+    popMatrix();  
     cam.moveRight();
   }
   
@@ -180,20 +187,6 @@ void draw(){
   else if(gameState == Game.STAGE_2){
     pushMatrix();
     translate(cam.getX(),cam.getY());
-    shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
-    if(shift >= POND_START - weedPatchSize){
-      for(int i = 0; i < lawn.length; i++){
-        waterGrass[i].drawGrass(POND_START);
-        waterGrass[i].drawGrass(POND_START+grassPatchSize);
-        waterGrass[i].drawGrass(POND_START+2*grassPatchSize);
-        waterGrass[i].drawGrass(POND_START+3*grassPatchSize);
-        waterGrass[i].drawGrass(POND_START+4*grassPatchSize);
-      }
-      for(int i = 2; i < waterWeeds.length; i++){
-          waterWeeds[i].drawCattail(POND_START);
-          waterWeeds[i].drawCattail(POND_START+weedPatchSize);
-      }
-    }
     for(int i = 0; i < fence.length; i++){
       fence[i].drawFence();
     }
@@ -205,7 +198,23 @@ void draw(){
       lawn[i].drawGrass(shift+3*grassPatchSize);
       lawn[i].drawGrass(shift+4*grassPatchSize);
     }
-    pond.drawPond();
+    shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+    if(shift >= POND_START - weedPatchSize){
+      for(int i = 0; i < lawn.length; i++){
+        waterGrass[i].drawGrass(POND_START);
+        waterGrass[i].drawGrass(POND_START+grassPatchSize);
+        waterGrass[i].drawGrass(POND_START+2*grassPatchSize);
+        waterGrass[i].drawGrass(POND_START+3*grassPatchSize);
+        waterGrass[i].drawGrass(POND_START+4*grassPatchSize);
+      }
+      pond.drawPond();
+      for(int i = 2; i < waterWeeds.length; i++){
+          waterWeeds[i].drawCattail(POND_START);
+          waterWeeds[i].drawCattail(POND_START+weedPatchSize);
+      }
+    }
+    rock.drawRock();
+
     brood[0].drawHomeWeb();
     int count = 0;
     for(int i = 0; i < brood.length; i++){
@@ -220,6 +229,7 @@ void draw(){
     }
     
     if(count == brood.length){
+    //if(count == 2){
       dialog.setText(stageTwoText[2]);
       if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
         dialog.setVisibility(false);
@@ -293,6 +303,7 @@ void draw(){
             waterWeeds[i].drawCattail(shift);
             waterWeeds[i].drawCattail(shift+weedPatchSize);
     }
+    rock.drawRock();
     for(int i = 0; i < pads.length; i++){
       pads[i].drawLillyPad();
     }
@@ -313,7 +324,9 @@ void draw(){
         count++;
         if(count == butterflies.length){
           gameState = Game.FINAL;
+          generateEndScreen();
           hero.toggleFinalText();
+          waiting = true;
         }
       }
       frogs[0].checkRange(butterflies[i].getPosition(), butterflies[i].getSize());
@@ -338,7 +351,12 @@ void draw(){
     popMatrix();
     
     if(-cam.getX() < POND_FINAL-width/2){
-      cam.lockOnTo(hero.getPosition().x);
+      if(hero.getPosition().x == POND_FINAL){
+        cam.moveRight(.5);
+      }
+      else{
+        cam.lockOnTo(hero.getPosition().x);
+      }
     }
     else{
       cam.setPos(POND_FINAL-width/2, 0);
@@ -354,7 +372,7 @@ void draw(){
         }
         clock.startTime();
       }
-      if(!roundUp && clock.getElapsedTime() > 30000 && !waiting){
+      if(!roundUp && clock.getElapsedTime() > 60000 && !waiting){
         roundUp = true;
         dialog.setText(stageThreeText[1]);
         dialog.setVisibility(true); 
@@ -366,6 +384,12 @@ void draw(){
   else if(gameState == Game.FINAL){
     pushMatrix();
     translate(cam.getX(),cam.getY());
+    for(int i = 0; i < sky.length; i++){
+      sky[i].drawCloud();
+    }
+    for(int i = 0; i < skyCredits.length; i++){
+      skyCredits[i].drawCloud();
+    }
     shift = floor(-cam.getX()/grassPatchSize)*grassPatchSize;  
     for(int i = 0; i < lawn.length; i++){
       waterGrass[i].drawGrass(shift);
@@ -389,6 +413,19 @@ void draw(){
       frogs[i].drawFrog();
       frogs[i].update();
     }
+    title.display();
+    body.display();
+    popMatrix();
+    if(waiting && (-cam.getY() < -height)){
+      waiting = false;
+      println(-cam.getY());
+      hero.speechBubbleSwitch(false);
+    }
+    if(-cam.getY() > -8.2*height){
+      cam.moveUp();
+    }
+    pushMatrix();
+    translate(cam.getX(), 0);
     for(int i = 0; i < butterflies.length; i++){
       butterflies[i].drawButterfly();
       butterflies[i].update(hero.getPosition());
@@ -398,12 +435,14 @@ void draw(){
     hero.update();
     popMatrix();
     
+
   }
   ///////////////////////////////////////// Game Over //////////////////////////////////////////////
   else if(gameState == Game.OVER){
    background(0,0,0);
    fill(255,0,0);
-   text("Game over! Press 'r' to restart.", width/2, height/2);
+   textSize(TEXT_SIZE);
+   text("Game over! \n Press 'R' to restart.", width/2, height/2);
   }
   checkInput();
   gameState = checkGameState();
@@ -423,8 +462,9 @@ void keyReleased(){
 void mousePressed(){
   if(gameState == Game.STAGE_1){
     float shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
-    for(int i = 0; i < weeds.length; i++){
-      if(weeds[i].hitDandelion(mouseX-cam.getX(), mouseY+cam.getY(), shift)){
+    float patch = ((mouseX - cam.getX()) < shift + weedPatchSize) ? 0 : weedPatchSize;
+    for(int i = 0; i < weeds.length; i++){ 
+      if(weeds[i].hitDandelion(mouseX-cam.getX(), mouseY+cam.getY(), shift, patch)){
         hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
       }
     }
@@ -435,9 +475,12 @@ void mousePressed(){
         hero.fireWeb(mouseX-cam.getX(), mouseY-cam.getY());
       }
     }
+  }
+  if(gameState == Game.STAGE_2){
     float shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+    float patch = ((mouseX - cam.getX()) < shift + weedPatchSize) ? 0 : weedPatchSize;
     for(int i = 0; i < waterWeeds.length; i++){
-      if(waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift)|| waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift+weedPatchSize)){
+      if(waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift, patch)){
         hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
       }
     }
@@ -445,8 +488,9 @@ void mousePressed(){
   if(gameState == Game.STAGE_3){
     if(hero.getPosition().x < POND_FINAL){
       float shift = (floor(-cam.getX()/weedPatchSize)*weedPatchSize);
+      float patch = ((mouseX - cam.getX()) < shift + weedPatchSize) ? 0 : weedPatchSize;
       for(int i = 0; i < waterWeeds.length; i++){
-        if(waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift)|| waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift+weedPatchSize)){
+        if(waterWeeds[i].hitCattail(mouseX-cam.getX(), mouseY+cam.getY(), shift, patch)){
           hero.fireWeb(mouseX-cam.getX(), mouseY+cam.getY());
         }
       }
@@ -457,6 +501,7 @@ void mousePressed(){
           butterflies[i].removeLimits();
         }
         waiting = false;
+        clock.startTime();
         dialog.setVisibility(false); 
       }
       for(int i = 0; i < butterflies.length; i++){
@@ -500,6 +545,7 @@ void checkInput(){
   }
   if(keys['D'] || keys['d']){
     hero.moveRight();
+    //cam.moveRight();
   }
   if(keys['W'] || keys['w']){
     cam.moveUp();
@@ -604,6 +650,15 @@ void checkInput(){
     dialog.setVisibility(true); 
     keys['4'] = false;
   }
+  if(keys['5']){
+    generateEndScreen();
+    gameState = Game.FINAL;
+    progress = Game.FINAL;
+    hero.speechBubbleSwitch(true);
+    hero.setPos(POND_FINAL, pads[0].getPosition().y-hero.getSize());
+    cam.setPos(POND_FINAL-width/2, 0);
+    keys['5'] = false;
+  }
 }
   
 Game checkGameState(){
@@ -675,4 +730,24 @@ void generateStartScreen(){
   body = new Bubble();
   body.setText("Help Spider Bro protect his friends and complete his missions as a Gaurdian of the Yard. Do your best to help out those in need! \n\n Controls: \n Click and hold inside the dandelion tops to swing. Press SPACE to retract your web faster. \n\n\n\n When you are ready, press 'R' to begin.");
   body.setSize(24);
+}
+
+void generateEndScreen(){
+  title = new Bubble(POND_FINAL-width/2, -7*height, width/2, height, true);
+  title.setSize(35);
+  title.setText("Congratulations! \n\n You have successfully completed your duties as a Gaurdian of the Yard!");
+  title.setVisibility(true);
+  body = new Bubble(POND_FINAL, -7*height, width/2, height, true);
+  body.setText("Press 'R' to return to the start screen.");
+  body.setSize(24);
+  body.setVisibility(true);
+}
+
+void initializeCloudText(){
+  skyCredits[0] = new Cloud(POND_FINAL - width/4, -3*height, height/3);
+  skyCredits[0].setText("Brought to you by Justin Wilder.");
+  skyCredits[1] = new Cloud(POND_FINAL, -4*height, height/3);
+  skyCredits[1].setText("Music by: ");
+  skyCredits[2] = new Cloud(POND_FINAL + width/4, -5*height, height/3);
+  skyCredits[2].setText("Thank you to my testers: ");
 }

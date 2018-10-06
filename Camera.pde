@@ -3,7 +3,7 @@ class Camera{
   final int MAX_VELOCITY = 7;
   PVector pos;
   float vel = 8;
-  float acceleration = .2;
+  float acceleration = .3;
   float adjust;
   PVector focus;
   boolean locked = true;

@@ -24,11 +24,8 @@ class Dandelion{
    popMatrix();
  }
  
- boolean hitDandelion(float x, float y, float shift){
-   if(dist(x,y, xPos+shift, yPos) <= size/2){
-     return true;
-   }
-   else if(dist(x,y, xPos+shift+weedPatchSize, yPos) <= size/2){
+ boolean hitDandelion(float x, float y, float shift, float weedPatch){
+   if(dist(x,y, xPos+shift+weedPatch, yPos) <= this.size/2){
      return true;
    }
    return false;
@@ -76,8 +73,8 @@ class Cattail{
     stemLength = height;
  }
  
-   boolean hitCattail(float x, float y, float shift){ //shift? weedPatchSize? 
-    if(x < xPos+shift || x > xPos + shift + wide){
+   boolean hitCattail(float x, float y, float shift, float weedPatch){ //shift? weedPatchSize? 
+    if(x < xPos+shift+weedPatch || x > xPos+shift+weedPatch+wide){
       return false; 
     }
     if(y < yPos - tall || y > yPos){
@@ -646,5 +643,64 @@ class Butterfly{
     dead = false;
     limited = true;
   }
+}
 
+class Rock{
+  PVector pos;
+  color shade = color(175,175,175);
+  int size;
+  
+  Rock(float x, float y, int big){
+    pos = new PVector(x,y);
+    size = big;
+  }
+  
+  void drawRock(){
+    fill(shade);
+    ellipse(pos.x, pos.y, 1.5*size, size);
+  }
+}
+
+class Cloud{
+ PVector pos;
+ color shade = color(255,255,255);
+ float size;
+ float sizeA, sizeB, sizeC, sizeD, sizeE;
+ color textColor = color(0,0,0);
+ boolean textCloud = false;
+ String message = "";
+ 
+ Cloud(float x, float y, float big){
+   pos = new PVector(x,y);
+   size = big;
+   sizeA = random(0.5*size, 0.75*size);
+   sizeB = random(0.75*size, 0.25*size);
+   sizeE = random(0.75*size, 0.25*size);
+   sizeC = random(0.5*size, size);
+   sizeD = random(0.5*size, size); 
+ }
+ 
+ void setText(String text){
+  message = text;
+  textCloud = true;
+ }
+ 
+ void drawCloud(){
+   noStroke();
+   fill(shade);
+   pushMatrix();
+   translate(pos.x, pos.y);
+   ellipse(0,0, size, size);
+   ellipse(0,0, size+sizeB+sizeE, sizeA);
+   ellipse(-size/2 - sizeB/2, 0, sizeB, sizeB);
+   ellipse(size/2 + sizeE/2, 0, sizeE, sizeE);
+   ellipse(-sizeC/2, -sizeA/2, sizeC, sizeC);
+   ellipse(sizeD/2, -sizeA/2, sizeD, sizeD);
+   if(textCloud){
+     fill(textColor);
+     text(message, 0,-sizeA/4);
+   }
+   popMatrix();
+ }
+ 
 }

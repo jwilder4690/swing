@@ -107,7 +107,7 @@ class Frog{
   //PVector targetPosition;
   boolean attacking = false;
   boolean retracting = false;
-  int tongueSpeed = 20;
+  int tongueSpeed = 25;
   PVector aim;
   int type;
   PVector prey;
@@ -117,13 +117,12 @@ class Frog{
     pos = new PVector(x,y); 
     headSize = big;
     tongueSize = headSize/2;
-    range = 5*headSize;
     angle = 0;
     tonguePosition = new PVector(0,0);
     aim = new PVector(0,0);
     prey = new PVector(0,0);
     type = style;
-    range = (type == CLIMBING) ? 5*headSize : 10*headSize;
+    range = (type == CLIMBING) ? 5*headSize : 15*headSize;
   }
   
   PVector getPosition(){
