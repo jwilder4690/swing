@@ -69,7 +69,7 @@ class Mower{
     if(screenOverlap(-cam.getX()) < -width*1.5 && phase3){
       acceleration = 0;
       velocity = 8;
-      mowerSound.stop();
+      mowerSound.pause();
       phase3 = false;
     }
   }
@@ -80,7 +80,7 @@ class Mower{
   }
   
   void reset(){
-    mowerSound.stop();
+    mowerSound.pause();
     pos = new PVector(startPos.x, startPos.y);
     angle = 0;
     acceleration = 0;
@@ -215,6 +215,7 @@ class Frog{
   }
   
   void launchTongue(PVector target){
+
     attacking = true;
     aim = PVector.sub(target,pos);
     angle = PVector.angleBetween(aim, new PVector(1,0));
@@ -223,6 +224,11 @@ class Frog{
     }
     aim.normalize();
     aim.mult(tongueSpeed);
+    
+    //Sound Effect
+    if(frameCount % 5 == 0){
+      frog.trigger();
+    }
   }
   
   boolean tongueHit(PVector target){
@@ -349,7 +355,7 @@ class Cat{
     if(cooldown == 0){
       cooldown = 60;
       hero.takeDamage();
-      meow.play();
+      meow.trigger();
     }
     else{
       cooldown--;
@@ -358,7 +364,7 @@ class Cat{
   
   void stopHunting(){
     if(hunting){
-      grumble.play();
+      grumble.trigger();
       hunting = false;
     }
     

@@ -1,5 +1,13 @@
-import processing.sound.*;
-SoundFile mowerSound, grunt, meow, grumble, yowl, wee, woo, yay, ok;
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+import ddf.minim.effects.*;
+import ddf.minim.signals.*;
+import ddf.minim.spi.*;
+import ddf.minim.ugens.*;
+
+Minim minim;
+AudioSample grunt, meow, grumble, yowl, wee, woo, yay, ok, frog;
+AudioPlayer song, mowerSound, nature;
 float amplitude = 1;
 
 final int UNIT_SPACING = 50;
@@ -15,8 +23,7 @@ int POND_FINAL;
 Hero hero;
 Camera cam;
 Clock clock;
-Bubble title;
-Bubble body;
+Bubble title, body, endLeft, endRight;
 Bubble dialog;
 Game gameState = Game.START;
 Game progress = Game.START;
@@ -56,7 +63,6 @@ void setup(){
   FENCE_START = width*9;
   POND_START = width*12;
   POND_FINAL = width*20;
-  //POND_FINAL = width*14;
   grassPatchSize = width/4.0;
   weedPatchSize = width;
   grassHeight = height/9; 
@@ -280,7 +286,7 @@ void draw(){
     else if(clock.getElapsedTime() > 3000 && cam.getY() >= height/2 && !hero.catFollowing){  //cat enters meow
       dialog.setVisibility(false); 
       hero.toggleCatFollowing();
-      yowl.play();
+      yowl.trigger();
     }
     dialog.display();
   }
@@ -413,8 +419,8 @@ void draw(){
       frogs[i].drawFrog();
       frogs[i].update();
     }
-    title.display();
-    body.display();
+    endLeft.display();
+    endRight.display();
     popMatrix();
     if(waiting && (-cam.getY() < -height)){
       waiting = false;
@@ -540,8 +546,15 @@ void mouseReleased(){
 
 
 void checkInput(){
-  if(keys['A'] || keys['a']){
-    hero.moveLeft();
+  if(keys['M'] || keys['m']){
+    if(song.isPlaying()){
+      song.pause();
+    }
+    else{
+      song.loop();
+    }
+     keys['M'] = false;
+     keys['m'] = false;
   }
   if(keys['D'] || keys['d']){
     hero.moveRight();
@@ -606,6 +619,10 @@ void checkInput(){
       }
       break;
     }
+    case FINAL:{
+      gameState = Game.START;
+      progress = Game.START;
+    }
     default:  break;
     }
     keys['r'] = false; 
@@ -633,6 +650,7 @@ void checkInput(){
     hero.setPos(POND_START+width/4, 0);
     cam.setPos(POND_START, 0);
     hero.setHealth(1);
+    //nature.play();
     keys['3'] = false;
   }
   if(keys['4']){
@@ -670,10 +688,10 @@ Game checkGameState(){
   }
   else if(gameState == Game.STAGE_1){
     float distance = mower.checkDistance(hero.getPosition());
-    amplitude = map(distance, 0, width, 2, 0.5); //neat 
-    mowerSound.amp(amplitude);
+    amplitude = map(distance, 0, width, 250, -30); //neat 
+    mowerSound.setGain(amplitude);
     if(distance <= 0){
-      mowerSound.stop();
+      mowerSound.pause();
       return Game.OVER;
     }
   }
@@ -685,7 +703,7 @@ Game checkGameState(){
   
   ////////////////////Stage Check//////////////////////////////////
   if(gameState == Game.FINAL){
-    progress = Game.START;
+    progress = Game.FINAL;
     return Game.FINAL;
   }
   if(-cam.getX() >= POND_START){
@@ -711,16 +729,22 @@ Game checkGameState(){
 }
 
 void createAudio(){
-  mowerSound = new SoundFile(this, "mower.wav");
-  grunt = new SoundFile(this, "grunt.wav");
-  meow = new SoundFile(this, "cat1.wav");
-  grumble = new SoundFile(this, "catGrumble.mp3");
-  yowl = new SoundFile(this, "catEntrance.mp3");
-  wee = new SoundFile(this, "wee.wav");
-  woo = new SoundFile(this, "woo.wav");
-  yay = new SoundFile(this, "yay.wav");
-  ok = new SoundFile(this, "ok.wav");
-  mowerSound.amp(amplitude);
+  minim = new Minim(this);
+  song = minim.loadFile("songOverlay.mp3");
+  song.setVolume(0.2);
+  song.loop();
+  mowerSound = minim.loadFile("mower.wav");
+  nature = minim.loadFile("nature.wav");
+  
+  grunt = minim.loadSample("grunt.wav");
+  meow = minim.loadSample("cat1.wav");
+  grumble = minim.loadSample("catGrumble.mp3");
+  yowl = minim.loadSample("catEntrance.mp3");
+  wee = minim.loadSample("wee.wav");
+  woo = minim.loadSample("woo.wav");
+  yay = minim.loadSample("yay.wav");
+  ok = minim.loadSample("ok.wav");
+  frog = minim.loadSample("frog.mp3");
 }
 
 void generateStartScreen(){
@@ -733,14 +757,14 @@ void generateStartScreen(){
 }
 
 void generateEndScreen(){
-  title = new Bubble(POND_FINAL-width/2, -7*height, width/2, height, true);
-  title.setSize(35);
-  title.setText("Congratulations! \n\n You have successfully completed your duties as a Gaurdian of the Yard!");
-  title.setVisibility(true);
-  body = new Bubble(POND_FINAL, -7*height, width/2, height, true);
-  body.setText("Press 'R' to return to the start screen.");
-  body.setSize(24);
-  body.setVisibility(true);
+  endLeft = new Bubble(POND_FINAL-width/2, -7*height, width/2, height, true);
+  endLeft.setSize(35);
+  endLeft.setText("Congratulations! \n\n You have successfully completed your duties as a Gaurdian of the Yard!");
+  endLeft.setVisibility(true);
+  endRight = new Bubble(POND_FINAL, -7*height, width/2, height, true);
+  endRight.setText("Press 'R' to return to the start screen.");
+  endRight.setSize(24);
+  endRight.setVisibility(true);
 }
 
 void initializeCloudText(){

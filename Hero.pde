@@ -128,7 +128,7 @@ void update(){
 }
 
 void takeDamage(){
-  grunt.play();
+  grunt.trigger();
   health--;
 }
 

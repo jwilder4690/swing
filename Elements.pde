@@ -387,10 +387,10 @@ class Spider{
       leash = new Web(pos.x, pos.y, momPos.x, momPos.y);
       leash.setAngle();
       switch(call){
-        case 0: wee.play(); break;
-        case 1: woo.play(); break;
-        case 2: yay.play(); break;
-        case 3: ok.play(); break;
+        case 0: wee.trigger(); break;
+        case 1: woo.trigger(); break;
+        case 2: yay.trigger(); break;
+        case 3: ok.trigger(); break;
       }
       
     }
