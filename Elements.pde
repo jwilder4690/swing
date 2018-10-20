@@ -107,7 +107,7 @@ class Fence{
   }
   
   void drawFence(){
-    stroke(55,55,55);
+    //stroke(55,55,55);
     fill(paint);
     rect(xPos, yPos - tall, wide, tall);
   }
@@ -376,7 +376,8 @@ class Spider{
       }
       
       if(random(1) > 0.99 && !safe){
-        downwardInfluence += 0.001;
+        //downwardInfluence += 0.001;
+        //TODO: Remove downward influence if not needed
       }
     }
   }

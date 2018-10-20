@@ -19,6 +19,9 @@ class Bubble{
   Bubble(){
     this(0,height,width, height, false);
   }
+  Bubble(boolean textOnly){
+    this(0,height,width, height, textOnly);
+  }
   Bubble(float x, float y, float bw, float bh, boolean textOnly){  //x, y are bottom left
     pos = new PVector(x,y);
     wide = bw;

@@ -1,9 +1,9 @@
 class Camera{
   
-  final int MAX_VELOCITY = 7;
+  final int MAX_VELOCITY = 10;
   PVector pos;
   float vel = 8;
-  float acceleration = .3;
+  float acceleration = .4;
   float adjust;
   PVector focus;
   boolean locked = true;
@@ -22,6 +22,9 @@ class Camera{
   }
   float getY(){
     return -pos.y;
+  }
+  float getZ(){
+    return -pos.z;
   }
   
   void setPos(float x, float y){
@@ -74,6 +77,14 @@ class Camera{
     if(pos.y > 0){
       pos.y = 0;
     }
+  }
+  
+  void moveOut(){
+    pos.z += vel;
+  }
+  
+  void moveIn(){
+    pos.z -= vel;
   }
   
   void reset(){

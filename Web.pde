@@ -19,6 +19,11 @@ Web(float startX, float startY, float endX, float endY){
   end = new PVector(endX, endY);
   prev = start;
 }
+
+float getAngle(){
+  return angle;
+}
+
 boolean checkRetracted(){
   //ternary operator practice:
     return (size == MINIMUM_LENGTH) ? true : false;

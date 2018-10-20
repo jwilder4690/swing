@@ -14,6 +14,7 @@ class Hero{
   final float DRIFT_SPEED = .1;
   float damping = .99;
   float grassDrag = .75;
+  float angle = 0;
   int health = 3;
   
   
@@ -51,7 +52,12 @@ PVector getVelocity(){
 }
 
 int getSize(){
-  return wide;
+  if(gameState == Game.STAGE_2){
+    return 2*wide;
+  }
+  else{
+    return wide;
+  }
 }
 
 int getHealth(){
@@ -81,8 +87,58 @@ void drawHero(){
   oldWeb.drawWeb();
   oldWeb.update();
   fill(0,0,0);
+  strokeWeight(4);
+  stroke(0,0,0);
+  pushMatrix();
+  translate(pos.x, pos.y);
+  rotate(angle);
+  if(webHeld){
+    line(0,0, wide, 0.2*wide);
+    line(wide, 0.2*wide, 0.7*wide, wide);
+    line(0,0, 0.9*wide, 0.5*wide);
+    line(0.9*wide, 0.5*wide, wide, 1.3*wide);
+    line(0,0, 0.6*wide, 0.8*wide);
+    line(0.6*wide, 0.8*wide, 0.5*wide, 1.7*wide);
+    line(0,0, 0.3*wide, wide);
+    line(0.3*wide, wide, 0.2*wide, 2*wide);
+    pushMatrix();
+    scale(-1,1);
+    line(0,0, wide, 0.2*wide);
+    line(wide, 0.2*wide, 0.7*wide, wide);
+    line(0,0, 0.9*wide, 0.5*wide);
+    line(0.9*wide, 0.5*wide, wide, 1.3*wide);
+    line(0,0, 0.6*wide, 0.8*wide);
+    line(0.6*wide, 0.8*wide, 0.5*wide, 1.7*wide);
+    line(0,0, 0.3*wide, wide);
+    line(0.3*wide, wide, 0.2*wide, 1.9*wide);
+    popMatrix();
+  }
+  else{
+    line(0,0, 0.5*wide, -wide);
+    line(0.5*wide, -wide, 0.8*wide, 0);
+    line(0,0, 0.8*wide,-0.8*wide);
+    line(0.8*wide,-0.8*wide, wide, .2*wide);
+    line(0,0, wide, -0.5*wide);
+    line(wide, -0.5*wide, wide, 0.5*wide);
+    line(0,0, 0.8*wide, 0.3*wide);
+    line(0.8*wide, 0.3*wide, 0.9*wide, 0.8*wide);
+    pushMatrix();
+    scale(-1,1);
+    line(0,0, 0.5*wide, -wide);
+    line(0.5*wide, -wide, 0.8*wide, 0);
+    line(0,0, 0.8*wide,-0.8*wide);
+    line(0.8*wide,-0.8*wide, wide, .2*wide);
+    line(0,0, wide, -0.5*wide);
+    line(wide, -0.5*wide, wide, 0.5*wide);
+    line(0,0, 0.8*wide, 0.3*wide);
+    line(0.8*wide, 0.3*wide, 0.9*wide, 0.8*wide);
+    popMatrix();
+  }
+  
   noStroke();
-  ellipse(pos.x, pos.y, wide, wide);
+  ellipse(0,0, wide, wide);
+  
+  popMatrix();
   speechBubble.display();
   speechBubble.update(pos);
 }
@@ -94,19 +150,23 @@ void update(){
       pos = currentWeb.update(grassDrag);
       currentWeb.shortenWeb(); //constantly retracts web
       currentWeb.shortenWeb();
+      angle = TWO_PI - currentWeb.getAngle();
     }
     else{
       pos.y = groundLevel+wide/2;
+      angle = 0;
     }
   }
   else if(webHeld){
     pos = currentWeb.update(damping);
     currentWeb.shortenWeb(); //constantly retracts web
+    angle = TWO_PI - currentWeb.getAngle();
   }
   else{
     vel.y = constrain(vel.y-GRAVITY, -TERMINAL_VELOCITY, TERMINAL_VELOCITY);
     pos.y += vel.y;
     pos.x += vel.x;
+    angle = 0;
   }
   //////////////////////////////Dialog///////////////////////////////////////////////////////
   if(gameState == Game.STAGE_1){
@@ -125,6 +185,10 @@ void update(){
       }
     }
   }
+}
+
+void clearOldWeb(){
+  oldWeb = new Web();
 }
 
 void takeDamage(){
