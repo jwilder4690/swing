@@ -16,12 +16,14 @@ class Hero{
   float grassDrag = .75;
   float angle = 0;
   int health = 3;
+  int wound = 0;
   
   
   //Dialog/////
   Bubble speechBubble;
   String[] quotes = {"Run!", "Get out of the way!", "Flee for your lives, the Grass Eater has awakened!"};
   String outro = "We did it, the Yard is safe again!";
+  String dead = "I can't give up yet!";
   int duration = 124;
   int interval = 15000;
   final int INTERVAL_STEP  = 15000;
@@ -60,8 +62,21 @@ int getSize(){
   }
 }
 
+int getWound(){
+  return wound;
+}
+
 int getHealth(){
   return health;
+}
+
+boolean getWebHeld(){
+  return webHeld;
+}
+
+void decrementWound(int adjust){
+  wound -= adjust;
+  if(wound < 0) wound = 0;
 }
 
 void setHealth(int hp){
@@ -78,6 +93,12 @@ void setPos(float x, float y){
 
 void setGroundLevel(float ground){
   groundLevel = ground;
+}
+
+void drawDead(){
+  angle = PI;
+  webHeld = false;
+  drawHero();
 }
 
 void drawHero(){
@@ -192,6 +213,7 @@ void clearOldWeb(){
 }
 
 void takeDamage(){
+  wound = 255;
   grunt.trigger();
   health--;
 }
@@ -234,6 +256,12 @@ void reset(){
   webHeld = false;
   pos = new PVector(startPos.x, startPos.y);
   vel = new PVector(0,0);
+}
+
+void toggleGameOverText(){
+    speechBubble.setVisibility(true);
+    speechBubble.setText(dead);
+    speechBubble.adjustToText();
 }
 
 void toggleFinalText(){

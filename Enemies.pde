@@ -133,31 +133,83 @@ class Frog{
     return tonguePosition;
   }
   
+
+  
   void drawFrog(){
     pushMatrix();
     translate(pos.x, pos.y);
-    //HEAD
-    pushMatrix(); 
-    fill(tongueColor);
-    ellipse(tonguePosition.x, tonguePosition.y, tongueSize, tongueSize);
-    stroke(tongueColor);
-    strokeWeight(7);
-    line(0,0, tonguePosition.x, tonguePosition.y);
-    noStroke();
-    strokeWeight(2);
-     fill(skin);
-    if(type == CLIMBING){
-      rotate(angle);
-      arc(0,0, headSize, headSize, PI/8,  TWO_PI - PI/8, PIE);
-    }
-    else if(type == SITTING){
-      ellipse(0,0, headSize, headSize);
-    }
-    popMatrix();
     
     //BODY
     if(type == CLIMBING){
-      ellipse(0, 1.4*headSize, 1.5*headSize, 2*headSize);
+      noStroke();
+      strokeWeight(2);
+      fill(skin);
+      //////////////// Hind leg Right //////////////////////
+      pushMatrix();      
+      translate(0.6*headSize, 1.85*headSize);
+      rotate(-PI/4);
+      ellipse(0,0, 1.5*headSize, .6*headSize);
+      popMatrix();
+      
+      pushMatrix();      
+      translate(0.75*headSize, 2.25*headSize);
+      rotate(-3*PI/8);
+      ellipse(0,0, 1.7*headSize, .4*headSize);
+      popMatrix();
+      
+      pushMatrix();      
+      translate(0.35*headSize, 2.9*headSize);
+      quad(0,0, 0.2*headSize, 0, 0.4*headSize, 0.7*headSize, -0.1*headSize, 0.9*headSize);
+      popMatrix();
+      
+      ///////////////// Hind leg Left //////////////////////
+      pushMatrix();      
+      translate(-0.5*headSize, 2.5*headSize);
+      rotate(-PI/4);
+      ellipse(0,0, 1.5*headSize, .6*headSize);
+      popMatrix();
+      
+      pushMatrix();      
+      translate(-0.75*headSize, 3.5*headSize);
+      rotate(3*PI/8);
+      ellipse(0,0, 1.7*headSize, .4*headSize);
+      popMatrix();
+      
+      pushMatrix();      
+      translate(-0.55*headSize, 4.15*headSize);
+      quad(0,0, 0.2*headSize, 0, 0.4*headSize, 0.8*headSize, -0.1*headSize, 0.8*headSize);
+      popMatrix();
+      
+      /////////////////// Front leg Right ////////////////////
+      
+      pushMatrix();      
+      translate(0.6*headSize, 0.6*headSize);
+      rotate(-PI/4);
+      ellipse(0,0, 1.4*headSize, .4*headSize);
+      popMatrix();
+      
+      pushMatrix();      
+      translate(0.75*headSize, -0.35*headSize);
+      rotate(3*PI/8);
+      ellipse(0,0, 1.4*headSize, .3*headSize);
+      popMatrix();     
+      
+      pushMatrix();      
+      translate(0.4*headSize, -0.8*headSize);
+      quad(0,0, 0.2*headSize, 0, 0.3*headSize, -0.9*headSize, -0.1*headSize, -0.7*headSize);
+      popMatrix();
+      
+      //////////////////// Front Leg Left /////////////////////
+      
+      pushMatrix();      
+      translate(-0.6*headSize, 0.6*headSize);
+      rotate(PI/4);
+      ellipse(0,0, 1.4*headSize, .4*headSize);
+      popMatrix();
+      
+      ///////////////////// Torso ////////////////////////////////
+      
+      ellipse(0, 1.4*headSize, 1.3*headSize, 2*headSize);
     }
     else if(type == SITTING){
       ellipse(0, headSize, 1.3*headSize, 1.4*headSize);
@@ -172,8 +224,42 @@ class Frog{
       ellipse(0,0, headSize/2, 1.4*headSize);
       popMatrix();
     }
+    
+    //HEAD
+    pushMatrix(); 
+    fill(tongueColor);
+    ellipse(tonguePosition.x, tonguePosition.y, tongueSize, tongueSize);
+    stroke(tongueColor);
+    strokeWeight(7);
+    line(0,0, tonguePosition.x, tonguePosition.y);
+    noStroke();
+    strokeWeight(2);
+    fill(skin);
+    if(type == CLIMBING){
+      rotate(angle);
+      arc(0,0, headSize, headSize, PI/8,  TWO_PI - PI/8, PIE);
+    }
+    else if(type == SITTING){
+      ellipse(0,0, headSize, headSize);
+    }
+    popMatrix();
     popMatrix();
   }
+  
+  void drawLeg(){
+    pushMatrix();
+    translate(pos.x, pos.y);
+    noStroke();
+    strokeWeight(2);
+    fill(skin);
+    pushMatrix();      
+    translate(-0.5*headSize, -0.15*headSize);
+    rotate(-PI/8);
+    ellipse(0,0, 1.4*headSize, .3*headSize);
+    popMatrix();  
+    popMatrix();
+  }
+  
   
   void update(){
     if(attacking && !retracting){
@@ -267,6 +353,7 @@ class Cat{
   }
   
   void drawCat(){
+    strokeWeight(2);
     fill(fur);
     pushMatrix();
     translate(pos.x + pace, pos.y);

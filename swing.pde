@@ -19,6 +19,7 @@ final int ERROR = -45;
 int FENCE_START;
 int POND_START;
 int POND_FINAL;
+color SKY = color(0,200,200);
 
 PImage background;
 
@@ -58,9 +59,10 @@ float shift;
 String[] stageTwoText = {"Oh no, come back, my babies! The Grass Eater is gone now, there is nothing to be afraid of. Can anyone help me up here?", "The Grass Eater scared my precious little ones into a frenzy, and now they won't come back to my web. Can you swing into them and send them back to me?", "All my children have returned to me, thank you so much Spider Bro!"};
 String[] stageThreeText = {"These two frogs have frightened this group of butterflies! I can protect them by pulling them away from the frogs with my web. Click and hold to pull them, drag and release to fling them.","Ok, now I've got enough web to round them up! Get a leash on each of them."};
 
+
 void setup(){
-  //fullScreen(P2D); 
-  size(1080,720, P2D);
+  fullScreen(P2D); 
+  //size(1080,720, P2D);
   frameRate(FPS);
   background = loadImage("splash.png");
   background.resize(width, height);
@@ -92,8 +94,6 @@ void setup(){
   }
   waterWeeds[0] = new Cattail(UNIT_SPACING/2, height/4, 1.2*UNIT_SPACING);
   waterWeeds[1] = new Cattail(-3*UNIT_SPACING/2, height/4, 1.2*UNIT_SPACING);
-  waterWeeds[0].setForeground();
-  waterWeeds[1].setForeground();
   for(int i = 2; i < waterWeeds.length; i++){
     waterWeeds[i] = new Cattail((i-2)*UNIT_SPACING+random(UNIT_SPACING/2), random(0, 3*height/7), random(0.9*UNIT_SPACING, 1.2*UNIT_SPACING));
   }
@@ -130,6 +130,9 @@ void setup(){
   for(int i = 2; i < frogs.length; i++){
       frogs[i] = new Frog(pads[i-1].getPosition().x, pads[i-1].getPosition().y - UNIT_SPACING/2, 2*UNIT_SPACING/5, 1);
   }
+  waterWeeds[0].setForeground(frogs[0]);
+  waterWeeds[1].setForeground(frogs[1]);
+  
   for(int i = 0; i < butterflies.length; i++){
     butterflies[i] = new Butterfly(POND_FINAL, height/3, UNIT_SPACING, 1);
   }
@@ -137,10 +140,11 @@ void setup(){
     sky[i] = new Cloud(random(POND_FINAL - width/2, POND_FINAL + width/2), -height/4-(i*random(height/5,height/3)), random(height/4,height/3));
   }
   initializeCloudText();
+
 }
 
 void draw(){
-  background(0,200,200);
+  background(SKY);
   ////////////////////////////////////////         Splash Screen        /////////////////////////////////////////
   if(gameState == Game.START){
     drawSplash();
@@ -239,7 +243,6 @@ void draw(){
     }
     
     if(count == brood.length){
-    //if(count == 2){
       dialog.setText(stageTwoText[2]);
       if(-cam.getX() >= FENCE_START+(5*fenceWidth)){
         dialog.setVisibility(false);
@@ -258,13 +261,27 @@ void draw(){
         cam.lockOnTo(hero.getPosition().x);
       }
     }
-
     if(hero.catFollowing){
       cat.drawCat();
       cat.update(hero.getPosition());
+      if(hero.getPosition().y > -cam.getY()+height && !hero.getWebHeld()){
+        hero.fireWeb(hero.getPosition().x, -height/4);
+      }
+      else if(hero.getPosition().x < FENCE_START + 1.5*fenceWidth && !hero.getWebHeld()){
+        hero.fireWeb(FENCE_START + 2*fenceWidth, -height/4); 
+      }
+      else if(hero.getPosition().x > FENCE_START + 1.5*fenceWidth + width && !hero.getWebHeld()){
+        hero.fireWeb(FENCE_START + fenceWidth + width, -height/4); 
+      }
     }
+
     hero.drawHero();
     hero.update();
+    if(hero.getWound() > 0){
+      fill(255,0,0, hero.getWound());
+      rect(-cam.getX(),-cam.getY(),width, height);
+      hero.decrementWound(30);
+    }
     popMatrix();
     
     if(cam.getY() >= height/2){
@@ -450,10 +467,7 @@ void draw(){
   }
   ///////////////////////////////////////// Game Over //////////////////////////////////////////////
   else if(gameState == Game.OVER){
-   background(0,0,0);
-   fill(255,0,0);
-   textSize(TEXT_SIZE);
-   text("Game over! \n Press 'R' to restart. \n\n Controls: \n Click and hold to swing. Press SPACE to retract your web faster.", width/2, height/2);
+   generateGameOverScreen();
   }
   checkInput();
   gameState = checkGameState();
@@ -722,6 +736,11 @@ void checkInput(){
     cam.setPos(POND_FINAL-width/2, 0);
     keys['6'] = false;
   }
+    if(keys['7']){
+    gameState = Game.OVER;
+    hero.toggleGameOverText();
+    keys['7'] = false;
+  }
 }
   
 Game checkGameState(){
@@ -806,6 +825,18 @@ void generateStartScreen(){
   body = new Bubble(true);
   body.setText("Help Spider Bro protect his friends and complete his missions as a Gaurdian of the Yard. Do your best to help out those in need! \n\n Controls: \n Click and hold inside the dandelion tops to swing. Press SPACE to retract your web faster. \n\n\n\n When you are ready, press 'R' to begin.");
   body.setSize(24);
+}
+
+void generateGameOverScreen(){
+   background(0,0,0);
+   fill(255,0,0);
+   textSize(TEXT_SIZE);
+   text("Game over! \n Press 'R' to restart. \n\n\n\n Controls: \n Click and hold to swing. \nPress SPACE to retract your web faster.", width/2, height/2.25); 
+   fill(SKY);
+   noStroke();
+   ellipse(width/2, height/2.5, 5*UNIT_SPACING,5*UNIT_SPACING);
+   hero.setPos(width/2, height/2.5);
+   hero.drawDead();
 }
 
 void generateEndScreen(){

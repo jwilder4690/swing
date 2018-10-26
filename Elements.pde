@@ -42,6 +42,9 @@ class Cattail{
   float tall;
   float stemLength;
   
+  Frog passenger;
+  boolean front = false;
+  
   Cattail(float x, float y, float thick){
     xPos = x;
     yPos = y;
@@ -55,6 +58,9 @@ class Cattail{
   }
   
   void drawCattail(float shift){
+    if(front){
+      passenger.drawLeg();
+    }
     noStroke();
     pushMatrix();
     translate(shift, 0);
@@ -65,12 +71,15 @@ class Cattail{
     rect(xPos + (wide/2 - wide/10), yPos - tall - wide/2, wide/5, wide, wide/10, wide/10, 0,0);
     rect(xPos, yPos - tall, wide, tall, wide/2,wide/2,wide/2,wide/2);
     popMatrix();
+    
  }
  
- void setForeground(){
+ void setForeground(Frog rider){
     stemColor = color(75, 200, 135);
     topColor = color(152, 101, 50);
     stemLength = height;
+    front = true;
+    passenger = rider;
  }
  
    boolean hitCattail(float x, float y, float shift, float weedPatch){ //shift? weedPatchSize? 
@@ -107,7 +116,8 @@ class Fence{
   }
   
   void drawFence(){
-    //stroke(55,55,55);
+    strokeWeight(1.5);
+    stroke(55,55,55);
     fill(paint);
     rect(xPos, yPos - tall, wide, tall);
   }
@@ -262,6 +272,7 @@ class Spider{
   
   PVector pos;
   PVector vel;
+  float direction = 0;
   float[] bounds;
   float limit;
   float speed;
@@ -321,7 +332,18 @@ class Spider{
     scale(scale);
     fill(bodyColor);
     noStroke();
+    rotate(direction);
     ellipse(0,0,size,size);
+    stroke(0,0,0);
+    strokeWeight(0.75);
+    rotate(-PI/4);
+    line(-1.1*size, 0, 1.1*size, 0);
+    rotate(PI/6);
+    line(-1.1*size, 0, 1.1*size, 0);
+    rotate(PI/6);
+    line(-1.1*size, 0, 1.1*size, 0);
+    rotate(PI/6);
+    line(-1.1*size, 0, 1.1*size, 0);
     popMatrix();    
 
     lowerLimit();  
@@ -368,12 +390,20 @@ class Spider{
       vel.x = constrain(vel.x + random(-speed, speed), -max, max);
       vel.y = constrain(vel.y + random(-speed, speed) + downwardInfluence, -max, max);
       
+
+      
       if(random(1) > .95){
         vel.y = -vel.y;
       }
       if(random(1) > .95){
         vel.x = -vel.x;
       }
+      
+      direction = PI/2-PVector.angleBetween(vel,pos); //still off when moving down
+      if(vel.y > 0){
+        direction += PI/2;
+      }
+
       
       if(random(1) > 0.99 && !safe){
         //downwardInfluence += 0.001;
