@@ -430,6 +430,7 @@ class Spider{
  
   
   void drawHomeWeb(){
+    strokeWeight(2);
     stroke(55,55,55);
     float size = (bounds[2]-bounds[0]);
     noFill();

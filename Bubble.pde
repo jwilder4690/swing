@@ -28,9 +28,13 @@ class Bubble{
     tall = bh;
     baseHeight = bh;
     font = createFont("BodoniMTCondensed-Bold-48.vlw", 48);
-    textFont(font);
+    //textFont(font);
     textAlign(CENTER,CENTER);
     this.textOnly = textOnly;
+  }
+  
+  void setFont(PFont newFont){
+    font = newFont;
   }
   
   void setText(String msg){
@@ -64,6 +68,7 @@ class Bubble{
     if(!visible){
       return;
     }
+    textFont(font);
     textSize(size);
     if(textOnly){
       fill(textColor);

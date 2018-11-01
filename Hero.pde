@@ -252,6 +252,7 @@ void moveRight(){
 
 void reset(){
   health = 3;
+  wound = 0;
   catFollowing = false;
   webHeld = false;
   pos = new PVector(startPos.x, startPos.y);

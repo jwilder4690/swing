@@ -35,6 +35,7 @@ void setEnd(float hx, float hy){
 
 void drawWeb(){
   stroke(75,75,75);
+  strokeWeight(2);
   line(start.x, start.y, end.x, end.y);
 }
 
