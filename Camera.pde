@@ -4,7 +4,7 @@ class Camera{
   PVector pos;
   float vel = 8;
   float acceleration = .4;
-  float adjust;
+  float adjust = 0;
   PVector focus;
   boolean locked = true;
   float location;
@@ -64,16 +64,16 @@ class Camera{
     pos.x += vel;
   }
   
-  void moveRight(float accel){
-    pos.x += vel + accel;
+  void moveRight(float manualVel){
+    pos.x += manualVel;
   }
   
   void moveUp(){
-    pos.y -= vel/2;
+    pos.y -= MAX_VELOCITY/3;
   }
   
   void moveDown(){
-    pos.y += vel/5;
+    pos.y += MAX_VELOCITY/5;
     if(pos.y > 0){
       pos.y = 0;
     }
@@ -89,5 +89,8 @@ class Camera{
   
   void reset(){
     pos = new PVector(0,0);
+    vel = 8;
+    acceleration = .4;
+    adjust = 0;
   }
 }

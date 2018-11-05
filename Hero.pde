@@ -257,6 +257,8 @@ void reset(){
   webHeld = false;
   pos = new PVector(startPos.x, startPos.y);
   vel = new PVector(0,0);
+  speechBubble.setText(quotes[0]);
+  speechBubble.adjustToText();
 }
 
 void toggleGameOverText(){

@@ -605,7 +605,11 @@ class Butterfly{
         }
         else if(pos.x < heroPos.x){
           pos.x += vel.x;
-        }    
+        }   
+        if(roundUp && insideLimits()){
+          leashButterfly(hero.getPosition());
+          limited = true;
+        }
       }
       else{
         pos.x = pos.x + (direction*vel.x);

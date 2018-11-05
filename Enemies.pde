@@ -91,6 +91,12 @@ class Mower{
     phase2 = false;
     phase3 = false;
   }
+  
+  String printInfo(){
+    String info;
+    info = "velocity "+ velocity + "\n acceleration " + acceleration + "\n pos " + pos + "\n angle " + angle + "\n startPoint " + startPoint + "\n Phases: " + phase1 + phase2 + phase3;
+    return info;
+  }
 }
 
 class Frog{
