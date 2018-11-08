@@ -1,4 +1,4 @@
-#Adventures of Spider Bro
+# Adventures of Spider Bro
 
 This is a game I created in processing/JAVA. I created the original concept for a game Jam in May, but it has evolved considerably since then.  
 
